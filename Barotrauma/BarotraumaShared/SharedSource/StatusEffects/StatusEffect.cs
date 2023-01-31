@@ -438,6 +438,7 @@ namespace Barotrauma
         private readonly List<Identifier> talentTriggers;
         private readonly List<int> giveExperiences;
         private readonly List<GiveSkill> giveSkills;
+        private readonly List<string> luaHook;
 
         public float Duration => duration;
 
@@ -492,6 +493,7 @@ namespace Barotrauma
             talentTriggers = new List<Identifier>();
             giveExperiences = new List<int>();
             giveSkills = new List<GiveSkill>();
+            luaHook = new List<string>();
             var multiplyAfflictionsElement = element.GetAttribute(nameof(multiplyAfflictionsByMaxVitality));
             if (multiplyAfflictionsElement != null)
             {
@@ -802,6 +804,9 @@ namespace Barotrauma
                         break;
                     case "giveskill":
                         giveSkills.Add(new GiveSkill(subElement, parentDebugName));
+                        break;
+                    case "luahook":
+                        luaHook.Add(subElement.GetAttributeString("name", ""));
                         break;
                 }
             }
@@ -1277,6 +1282,32 @@ namespace Barotrauma
                 if (lifeTimer <= 0) { return; }
             }
             if (ShouldWaitForInterval(entity, deltaTime)) { return; }
+
+            {
+                if (entity is Item item)
+                {
+                    var result = GameMain.LuaCs.Hook.Call<bool?>("statusEffect.apply." + item.Prefab.Identifier, this, deltaTime, entity, targets, worldPosition);
+
+                    if (result != null && result.Value)
+                        return;
+                }
+
+                if (entity is Character character)
+                {
+                    var result = GameMain.LuaCs.Hook.Call<bool?>("statusEffect.apply." + character.SpeciesName, this, deltaTime, entity, targets, worldPosition);
+
+                    if (result != null && result.Value)
+                        return;
+                }
+            }
+
+            foreach (string luaHooks in luaHook)
+            {
+                var result = GameMain.LuaCs.Hook.Call<bool?>(luaHooks, this, deltaTime, entity, targets, worldPosition);
+
+                if (result != null && result.Value)
+                    return;
+            }
 
             Hull hull = GetHull(entity);
             Vector2 position = GetPosition(entity, targets, worldPosition);

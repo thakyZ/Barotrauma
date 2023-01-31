@@ -1,4 +1,4 @@
-﻿using Barotrauma.Networking;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
         private float range;
 
         private int channel;
-        
+
         private float chatMsgCooldown;
 
         private string prevSignal;
@@ -64,13 +64,28 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        private bool linkToChat = false;
+
         [ConditionallyEditable(ConditionallyEditable.ConditionType.AllowLinkingWifiToChat)]
         [Serialize(false, IsPropertySaveable.No, description: "If enabled, any signals received from another chat-linked wifi component are displayed " +
             "as chat messages in the chatbox of the player holding the item.", alwaysUseInstanceValues: true)]
         public bool LinkToChat
         {
+#if SERVER
+            get
+			{
+                if(GameMain.LuaCs.Game.allowWifiChat) return true;
+                return linkToChat;
+            }
+
+			set
+			{
+                linkToChat = value;
+            }
+#else
             get;
             set;
+#endif
         }
 
         [Editable, Serialize(1.0f, IsPropertySaveable.Yes, description: "How many seconds have to pass between signals for a message to be displayed in the chatbox. " +
@@ -200,6 +215,11 @@ namespace Barotrauma.Items.Components
 
         public void TransmitSignal(Signal signal, bool sentFromChat)
         {
+            var should = GameMain.LuaCs.Hook.Call<bool?>("wifiSignalTransmitted", this, signal, sentFromChat);
+
+            if (should != null && should.Value)
+                return;
+
             if (sentFromChat)
             {
                 item.LastSentSignalRecipients.Clear();
@@ -285,15 +305,15 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            if (chatMsgSent) 
-            { 
+            if (chatMsgSent)
+            {
                 chatMsgCooldown = MinChatMessageInterval;
                 IsActive = true;
             }
 
             prevSignal = signal.value;
         }
-                
+
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (connection == null) { return; }

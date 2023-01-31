@@ -6,12 +6,17 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
+using Barotrauma.Extensions;
+using System.Globalization;
+using MoonSharp.Interpreter;
+using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
     partial class CharacterHealth
     {
-        class LimbHealth
+        public class LimbHealth
         {
             public Sprite IndicatorSprite;
             public Sprite HighlightSprite;
@@ -429,6 +434,7 @@ namespace Barotrauma
                     {
                         AddLimbAffliction(limbHealth, affliction, allowStacking: allowStacking);
                     }
+
                 }
                 else
                 {
@@ -572,6 +578,11 @@ namespace Barotrauma
                     "\" only has health configured for" + limbHealths.Count + " limbs but the limb " + hitLimb.type + " is targeting index " + hitLimb.HealthIndex);
                 return;
             }
+
+            var should = GameMain.LuaCs.Hook.Call<bool?>("character.applyDamage", this, attackResult, hitLimb, allowStacking);
+
+            if (should != null && should.Value)
+                return;
 
             foreach (Affliction newAffliction in attackResult.Afflictions)
             {
@@ -717,6 +728,11 @@ namespace Barotrauma
                     return;
                 }
             }
+
+            var should = GameMain.LuaCs.Hook.Call<bool?>("character.applyAffliction", this, limbHealth, newAffliction, allowStacking);
+
+            if (should != null && should.Value)
+                return;
 
             Affliction existingAffliction = null;
             foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)

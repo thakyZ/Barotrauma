@@ -5,6 +5,7 @@ VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D32A29D8-AC7B-4189-B734-8ED9EB4120D0}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		NuGet.Config = NuGet.Config
 	EndProjectSection
 EndProject
@@ -40,6 +41,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGame.Framework.Linux.NetStandard", "Libraries\MonoGame.Framework\Src\MonoGame.Framework\MonoGame.Framework.Linux.NetStandard.csproj", "{33E95A21-E071-4432-819F-AA64CF3EF3F1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinuxTest", "Barotrauma\BarotraumaTest\LinuxTest.csproj", "{F1B80D94-8BD6-48CE-8D17-BB2A5C98BCA3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoonSharp.Interpreter", "Libraries\moonsharp\MoonSharp.Interpreter\MoonSharp.Interpreter.csproj", "{382DFA63-78FC-41AC-BA85-630960A56E5C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeployAll", "Deploy\DeployAll\DeployAll.csproj", "{60B82E13-2CDD-4C74-8373-FD7264D6C80B}"
 EndProject

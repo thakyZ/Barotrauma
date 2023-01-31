@@ -263,7 +263,7 @@ namespace Barotrauma.Networking
 
             otherClients = new List<Client>();
 
-            ServerSettings = new ServerSettings(this, "Server", 0, 0, 0, false, false);
+            ServerSettings = new ServerSettings(this, "Server", 0, 0, 0, false, false, System.Net.IPAddress.Any);
             Voting = new Voting();
 
             serverEndpoint = endpoint;
@@ -569,6 +569,8 @@ namespace Barotrauma.Networking
         private void ReadDataMessage(IReadMessage inc)
         {
             ServerPacketHeader header = (ServerPacketHeader)inc.ReadByte();
+
+            GameMain.LuaCs.Networking.NetMessageReceived(inc, header);
 
             if (roundInitStatus == RoundInitStatus.WaitingForStartGameFinalize
                 && header is not (
@@ -2571,6 +2573,8 @@ namespace Barotrauma.Networking
 
         public void Quit()
         {
+            GameMain.LuaCs.Stop();
+            
             ClientPeer?.Close(PeerDisconnectPacket.WithReason(DisconnectReason.Disconnected));
             
             GUIMessageBox.MessageBoxes.RemoveAll(c => c?.UserData is RoundSummary);
@@ -2667,6 +2671,9 @@ namespace Barotrauma.Networking
 
         public override void AddChatMessage(ChatMessage message)
         {
+            var should = GameMain.LuaCs.Hook.Call<bool?>("chatMessage", message.Text, message.SenderClient, message.Type, message);
+            if (should != null && should.Value) return;
+
             base.AddChatMessage(message);
 
             if (string.IsNullOrEmpty(message.Text)) { return; }

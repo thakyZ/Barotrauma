@@ -216,6 +216,8 @@ namespace Barotrauma
 
         private static bool IsCommandPermitted(string command, GameClient client)
         {
+            if (GameMain.LuaCs.Game.IsCustomCommandPermitted(command)) { return true; }
+
             switch (command)
             {
                 case "kick":
@@ -3321,6 +3323,29 @@ namespace Barotrauma
                     NewMessage("Level seed: " + Level.Loaded.Seed);
                 }
             });
+
+            commands.Add(new Command("cl_lua", $"cl_lua: Runs a string on the client.", (string[] args) =>
+            {
+                if (GameMain.Client != null && !GameMain.Client.HasPermission(ClientPermissions.ConsoleCommands))
+                {
+                    ThrowError("Command not permitted.");
+                    return;
+                }
+
+                try
+                {
+                    GameMain.LuaCs.Lua.DoString(string.Join(" ", args));
+                }
+                catch(Exception ex)
+                {
+                    LuaCsLogger.HandleException(ex, LuaCsMessageOrigin.LuaMod);
+                }
+            }));
+
+            commands.Add(new Command("cl_reloadlua|cl_reloadcs|cl_reloadluacs", "Re-initializes the LuaCs environment.", (string[] args) =>
+            {
+                GameMain.LuaCs.Initialize();
+            }));
         }
 
         private static void ReloadWearables(Character character, int variant = 0)

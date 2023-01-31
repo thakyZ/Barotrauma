@@ -19,8 +19,10 @@ namespace Barotrauma
         protected List<ushort> linkedToID;
         public List<ushort> unresolvedLinkedToID;
 
-        private const int GapUpdateInterval = 4;
-        private static int gapUpdateTimer;
+        public static int MapEntityUpdateInterval = 1;
+        public static int GapUpdateInterval = 4;
+        public static int PoweredUpdateInterval = 1;
+        private static int mapEntityUpdateTick;
 
         /// <summary>
         /// List of upgrades this item has
@@ -558,35 +560,44 @@ namespace Barotrauma
         /// </summary>
         public static void UpdateAll(float deltaTime, Camera cam)
         {
+            mapEntityUpdateTick++;
+
 #if CLIENT
             var sw = new System.Diagnostics.Stopwatch();
             sw.Start();
 #endif
-            foreach (Hull hull in Hull.HullList)
+            if (mapEntityUpdateTick % MapEntityUpdateInterval == 0)
             {
-                hull.Update(deltaTime, cam);
-            }
+
+                foreach (Hull hull in Hull.HullList)
+                {
+                    hull.Update(deltaTime * MapEntityUpdateInterval, cam);
+                }
 #if CLIENT
-            Hull.UpdateCheats(deltaTime, cam);
+                Hull.UpdateCheats(deltaTime * MapEntityUpdateInterval, cam);
 #endif
 
-            foreach (Structure structure in Structure.WallList)
-            {
-                structure.Update(deltaTime, cam);
+                foreach (Structure structure in Structure.WallList)
+                {
+                    structure.Update(deltaTime * MapEntityUpdateInterval, cam);
+                }
             }
 
             //update gaps in random order, because otherwise in rooms with multiple gaps
             //the water/air will always tend to flow through the first gap in the list,
             //which may lead to weird behavior like water draining down only through
             //one gap in a room even if there are several
-            gapUpdateTimer++;
-            if (gapUpdateTimer >= GapUpdateInterval)
+            if (mapEntityUpdateTick % GapUpdateInterval == 0)
             {
                 foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
                 {
                     gap.Update(deltaTime * GapUpdateInterval, cam);
                 }
-                gapUpdateTimer = 0;
+            }
+
+            if (mapEntityUpdateTick % PoweredUpdateInterval == 0)
+            {
+                Powered.UpdatePower(deltaTime * PoweredUpdateInterval);
             }
 
 #if CLIENT
@@ -594,20 +605,35 @@ namespace Barotrauma
             GameMain.PerformanceCounter.AddElapsedTicks("Update:MapEntity:Misc", sw.ElapsedTicks);
             sw.Restart();
 #endif
-            Powered.UpdatePower(deltaTime);
-            foreach (Item item in Item.ItemList)
+
+            if (mapEntityUpdateTick % MapEntityUpdateInterval == 0)
             {
-                item.Update(deltaTime, cam);
+                foreach (Item item in Item.ItemList)
+                {
+                    if (GameMain.LuaCs.Game.UpdatePriorityItems.Contains(item)) continue;
+                    item.Update(deltaTime * MapEntityUpdateInterval, cam);
+                }
             }
 
-            UpdateAllProjSpecific(deltaTime);
+            foreach (var item in GameMain.LuaCs.Game.UpdatePriorityItems)
+            {
+                if (item.Removed) continue;
+
+                item.Update(deltaTime, cam);
+            }
 
 #if CLIENT
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Update:MapEntity:Items", sw.ElapsedTicks);
             sw.Restart();
 #endif
-            Spawner?.Update();
+
+            if (mapEntityUpdateTick % MapEntityUpdateInterval == 0)
+            {
+                UpdateAllProjSpecific(deltaTime * MapEntityUpdateInterval);
+
+                Spawner?.Update();
+            }
         }
 
         static partial void UpdateAllProjSpecific(float deltaTime);

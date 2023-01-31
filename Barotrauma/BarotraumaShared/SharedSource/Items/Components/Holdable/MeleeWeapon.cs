@@ -412,6 +412,7 @@ namespace Barotrauma.Items.Components
             Structure targetStructure = target.UserData as Structure ?? targetFixture.UserData as Structure;
             Item targetItem = target.UserData as Item;
             Entity targetEntity = targetCharacter ?? targetStructure ?? targetItem ?? target.UserData as Entity;
+            GameMain.LuaCs.Hook.Call("meleeWeapon.handleImpact", this, target);
             if (Attack != null)
             {
                 Attack.SetUser(user);

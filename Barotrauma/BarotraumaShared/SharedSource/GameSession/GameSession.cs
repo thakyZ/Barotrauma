@@ -536,6 +536,8 @@ namespace Barotrauma
             GUI.PreventPauseMenuToggle = false;
 
             HintManager.OnRoundStarted();
+
+            GameMain.LuaCs.Hook.Call("roundStart");
 #endif
         }
 
@@ -762,6 +764,9 @@ namespace Barotrauma
         /// </remarks>
         public static ImmutableHashSet<Character> GetSessionCrewCharacters(CharacterType type)
         {
+            var result = GameMain.LuaCs.Hook.Call<Character[]?>("getSessionCrewCharacters", type);
+            if (result != null) return ImmutableHashSet.Create(result);
+
             if (GameMain.GameSession?.CrewManager is not { } crewManager) { return ImmutableHashSet<Character>.Empty; }
 
             IEnumerable<Character> players;
@@ -792,6 +797,9 @@ namespace Barotrauma
         {
             RoundEnding = true;
 
+#if CLIENT
+            GameMain.LuaCs.Hook.Call("roundEnd");
+#endif
             //Clear the grids to allow for garbage collection
             Powered.Grids.Clear();
 
@@ -828,6 +836,8 @@ namespace Barotrauma
                         }
                     }
                 }
+
+                GameMain.LuaCs.Hook.Call("missionsEnded", missions);
 
 #if CLIENT
                 if (GUI.PauseMenuOpen)

@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Security.Cryptography;
@@ -173,7 +174,7 @@ namespace Barotrauma
             public void AddNodesAndInheritors(IEnumerable<PrefabInstance> ids)
                 => ids.ForEach(id => AddNodeAndInheritors(id));
 
-            public void InvokeCallbacks()
+            public void InvokeCallbacks(bool force_resolve = false)
             {
                 HashSet<Node> uncheckedNodes = IdToNode.Values.ToHashSet();
 
@@ -197,6 +198,9 @@ namespace Barotrauma
                             prefab.CheckInheritHistory(parent);
                             prefab.InheritFrom(parent!);
                         }
+                        else if (force_resolve) {
+                            DebugConsole.LogError($"Cannot resolve inheritance of {(prefab as T)!.Identifier} inheriting {prefab.InheritParent.id}!");
+                        }
                     }
                     node.Inheritors.ForEach(invokeCallbacksForNode);
                 }
@@ -204,21 +208,21 @@ namespace Barotrauma
             }
         }
 
-        private void HandleInheritance(T prefab)
+        private void HandleInheritance(T prefab, bool force_resolve = false)
         {
             var inst = new PrefabInstance(prefab.Identifier, prefab.ContentPackage?.Name ?? "");
-            HandleInheritance(inst);
+            HandleInheritance(inst, force_resolve);
         }
 
-        private void HandleInheritance(PrefabInstance prefabInstance)
-            => HandleInheritance(prefabInstance.ToEnumerable());
+        private void HandleInheritance(PrefabInstance prefabInstance, bool force_resolve = false)
+            => HandleInheritance(prefabInstance.ToEnumerable(), force_resolve);
 
-        private void HandleInheritance(IEnumerable<PrefabInstance> prefabInstance)
+        private void HandleInheritance(IEnumerable<PrefabInstance> prefabInstance, bool force_resolve = false)
         {
             if (!implementsVariants) { return; }
             InheritanceTreeCollection inheritanceTreeCollection = new InheritanceTreeCollection(this);
             inheritanceTreeCollection.AddNodesAndInheritors(prefabInstance);
-            inheritanceTreeCollection.InvokeCallbacks();
+            inheritanceTreeCollection.InvokeCallbacks(force_resolve);
         }
 
         /// <summary>
@@ -503,7 +507,7 @@ namespace Barotrauma
             // inheritance cannot just work topmost prefab
             // Mod A have item a, Mod B partially overrides Mod A's a.
             // If you have Mod B, this doesn't necessarily mean Mod B works correctly
-            AllPrefabs.SelectMany(p => p.Value).ForEach(p => HandleInheritance(p));
+            AllPrefabs.SelectMany(p => p.Value).ForEach(p => HandleInheritance(p, true));
             /*
             foreach(T p in this){
                 HandleInheritance(p);

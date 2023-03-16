@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Barotrauma.Extensions;
 using Barotrauma.Steam;
 using System;
@@ -162,7 +162,7 @@ namespace Barotrauma
             => (UgcId.Fallback(ContentPackageId.NULL).ToString().Equals(workshop_id_or_name) || NameMatches(workshop_id_or_name));
 
         public string GetBestEffortId() {
-			if (UgcId.TryUnwrap(out ContentPackageId id))
+			if (UgcId.TryUnwrap(out ContentPackageId? id))
 			{
 				return id.ToString();
 			}

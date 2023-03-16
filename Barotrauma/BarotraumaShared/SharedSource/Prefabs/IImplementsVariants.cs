@@ -32,12 +32,15 @@ namespace Barotrauma
     public interface IImplementsVariants<T> where T : Prefab
     {
         // direct parent of the prefab
+        // we do not use a concrete T: Prefab because reloading mod order will change resolution.
+        // also T: Prefab will create a strong reference, unfriendly for gc disposal.
         public PrefabInstance InheritParent => originalElement.InheritParent();
 
 		// ancestry line of the prefab
+        // may break if one package contains more than one instance of same identifier, otherwise stable.
 		public IEnumerable<T> InheritHistory { 
             get {
-                IImplementsVariants<T> cur = this;
+                IImplementsVariants<T>? cur = this;
                 while(!(cur.InheritParent?.IsEmpty??true)){
                     if(cur.InheritParent.package.IsNullOrEmpty()){
                         cur = cur.GetPrevious(cur.InheritParent.id) as IImplementsVariants<T>;
@@ -46,8 +49,8 @@ namespace Barotrauma
                         cur = FindByPrefabInstance(cur.InheritParent) as IImplementsVariants<T>;
                     }
                     if (cur is null) break;
-                    yield return cur as T;
-				}
+                    yield return (cur as T)!;
+                }
 			} 
         }
 
@@ -60,26 +63,28 @@ namespace Barotrauma
         public bool CheckInheritHistory(T parent)
         {
             bool result = true;
-			if ((parent as IImplementsVariants<T>).InheritHistory.Any(p => ReferenceEquals(p, this as T)))
+			if ((parent as IImplementsVariants<T>)!.InheritHistory.Any(p => ReferenceEquals(p, this as T)))
 		    {
 				throw new Exception("Inheritance cycle detected: "
 					+ string.Join(", ", InheritHistory.Select(n => "(id: " + n.Identifier.ToString() + ", package: " + n.ContentPackage!.Name + ")"),
-					"(id: " + (this as T).Identifier.ToString() + ", package: " + (this as T).ContentPackage.Name + ")"));
+					"(id: " + (this as T)!.Identifier.ToString() + ", package: " + (this as T)!.ContentPackage!.Name + ")"));
 			}
 			return result;
         }
 
         public T FindByPrefabInstance(PrefabInstance instance);
 
+        // This is for iteration through inheritance history
+        // may break if one package contains more than one instance of same identifier, otherwise stable.
         public T GetPrevious(Identifier id);
 
-        public ContentXElement DoInherit(Action<ContentXElement, ContentXElement, ContentXElement> create_callback)
+        public ContentXElement DoInherit(VariantExtensions.VariantXMLChecker create_callback)
         {
             Stack<ContentXElement> preprocessed = new Stack<ContentXElement>();
-            var last_elem = originalElement.FromContent((this as T).FilePath);
+            var last_elem = originalElement.FromContent((this as T)!.FilePath);
             foreach(var it in InheritHistory)
 			{
-				preprocessed.Push(last_elem.PreprocessInherit((it as IImplementsVariants<T>).originalElement.FromContent(it.ContentFile.Path), false));
+				preprocessed.Push(last_elem.PreprocessInherit((it as IImplementsVariants<T>)!.originalElement.FromContent(it.ContentFile.Path), false));
 				last_elem = preprocessed.Peek();
 			}
             ContentXElement previous = preprocessed.Pop();
@@ -87,7 +92,7 @@ namespace Barotrauma
             {
                 previous = preprocessed.Pop().CreateVariantXML(previous, create_callback);
             }
-            return originalElement.FromContent((this as T).ContentFile.Path).CreateVariantXML(previous, create_callback);
+            return originalElement.FromContent((this as T)!.ContentFile.Path).CreateVariantXML(previous, create_callback);
         }
     }
 
@@ -123,9 +128,9 @@ namespace Barotrauma
                             baseElement.GetAttributeIdentifier("speciesname", "") : baseElement.GetAttributeIdentifier("identifier", "")))
                 .SelectMany(p => p.Elements().SkipWhile(p => is_post_process ? !p.Name.ToString().Equals("doinherit") : false).Skip(is_post_process?1:0));
             // adapted from barotrauma mod generator
-            foreach (XElement change in inherits)
+            foreach (XElement? change in inherits)
             {
-                string xpath = change.Attribute("sel")?.Value??".";
+                string xpath = change!.Attribute("sel")?.Value??".";
                 bool done = false;
                 switch (change.Name.ToString().ToLower())
                 {
@@ -270,7 +275,7 @@ namespace Barotrauma
                         if (attribute.Name.ToString().Equals("folder", StringComparison.OrdinalIgnoreCase) && attribute.Value.ToString().Equals("default", StringComparison.OrdinalIgnoreCase))
                         {
                             if(!old_element.GetAttributeBool("usehuskappendage",false)) {
-								if (attribute.Parent.Name.ToString().Equals("ragdolls", StringComparison.OrdinalIgnoreCase))
+								if (attribute.Parent!.Name.ToString().Equals("ragdolls", StringComparison.OrdinalIgnoreCase))
 								{
 									evaluated = ContentPath.FromRaw(old_element.ContentPath, "./Ragdolls/");
 								}
@@ -321,7 +326,9 @@ namespace Barotrauma
             return newElement;
         }
 
-        public static ContentXElement CreateVariantXML(this ContentXElement variantElement, ContentXElement baseElement, Action<ContentXElement, ContentXElement, ContentXElement> create_callback)
+        // use original added new VariantXMLChecker type, difference is ContentXElement and XElement.
+        // since current checking does not require path and package information, the change is trivial.
+        public static ContentXElement CreateVariantXML(this ContentXElement variantElement, ContentXElement baseElement, VariantXMLChecker checker)
         {
             // As of 0.18.15.1, grep -r "Content/" yields only texture="xxx" and file="yyy" attributes.
             // This means for config feature set vanilla is using, replacing can be safely done via these two attributes.
@@ -329,7 +336,7 @@ namespace Barotrauma
             // cannot copy baseuri here
             ContentXElement newElement = variantElement.PreprocessInherit(baseElement, true);
 
-            ReplaceElement(newElement, variantElement);
+            ReplaceElement(newElement.Element, variantElement.Element);
 
             void ReplaceElement(XElement element, XElement replacement)
             {
@@ -383,11 +390,13 @@ namespace Barotrauma
                     }
                 }
                 elementsToRemove.ForEach(e => e.Remove());
+                // checker is never recursive
+                /*
                 checker?.Invoke(originalElement, replacement, element);
                 foreach (XElement newElement in newElementsFromBase)
                 {
                     checker?.Invoke(newElement, null, newElement);
-                }
+                }*/
             }
 
             void ReplaceAttribute(XElement element, XAttribute newAttribute)
@@ -431,8 +440,7 @@ namespace Barotrauma
                 }
             }
 
-            create_callback?.Invoke(newElement,variantElement,baseElement);
-            VariantXMLChecker?.Invoke(baseElement, variantElement, newElement);
+            checker?.Invoke(newElement.Element,variantElement.Element, baseElement.Element);
             return newElement;
         }
     }

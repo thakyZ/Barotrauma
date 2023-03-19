@@ -1386,14 +1386,14 @@ namespace Barotrauma
         {
             Item.RemoveByPrefab(this);
         }
-        
+
         public Identifier VariantOf { get; }
         public ItemPrefab ParentPrefab { get; set; }
 
         public void InheritFrom(ItemPrefab parent)
         {
-            ConfigElement = (this as IImplementsVariants<ItemPrefab>).DoInherit(CheckXML);
-            ParseConfigElement(parent);
+			ConfigElement = (this as IImplementsVariants<ItemPrefab>).DoInherit(CheckXML);
+			ParseConfigElement(parent);
 
             void CheckXML(XElement originalElement, XElement variantElement, XElement result)
             {

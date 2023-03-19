@@ -4,7 +4,6 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Security.Cryptography;
@@ -146,16 +145,16 @@ namespace Barotrauma
                     //all inheritors so let's just return this immediately
                     return node;
                 }
-
+            
                 // for overridden stuff to be found by inheritance, one must use all prefabs asscociated with id,
                 // not just the active prefab, as implemented by PrefabCollection's enummerator
                 prefabCollection.prefabs
                     .SelectMany(p => p.Value)
                     .Cast<IImplementsVariants<T>>()
                     .Where(p => p.InheritParent.id == inst.id)
-                    // only the current package is null
+                     // only the current package is null
                     .Where(p => (p.InheritParent.package == inst.package
-                        // variant inheritance across package boundary need reload prefab, so the evaluated one doesn't count here.
+                       // variant inheritance across package boundary need reload prefab, so the evaluated one doesn't count here.
                         || (p.originalElement.InheritParent().package.IsNullOrEmpty() && p.GetPrevious(inst.id)?.ContentPackage?.Name == inst.package))
                         && p.CheckInheritHistory(prefab))
                     .Cast<T>()
@@ -182,34 +181,35 @@ namespace Barotrauma
                 {
                     if (!prefabCollection.TryGet(node.Inst, out var p) ||
                         !(p is IImplementsVariants<T> prefab)) { return; }
-                    if (!prefab.InheritParent.id.IsEmpty)
-                    {
-                        T parent;
-                        if (prefab.InheritParent.package.IsNullOrEmpty())
-                        {
-                            parent = prefab.GetPrevious(prefab.InheritParent.id);
-                        }
-                        else
-                        {
-                            parent = prefab.FindByPrefabInstance(prefab.InheritParent);
-                        }
-                        if (!(parent is null))
-                        {
-                            prefab.CheckInheritHistory(parent);
-                            prefab.InheritFrom(parent!);
-                        }
-                        else if (force_resolve) {
-                            DebugConsole.LogError($"Cannot resolve inheritance of {(prefab as T)!.Identifier} inheriting {prefab.InheritParent.id}!");
-                        }
-                    }
-                    node.Inheritors.ForEach(invokeCallbacksForNode);
+					if (!prefab.InheritParent.id.IsEmpty)
+					{
+						T parent;
+						if (prefab.InheritParent.package.IsNullOrEmpty())
+						{
+							parent = prefab.GetPrevious(prefab.InheritParent.id);
+						}
+						else
+						{
+							parent = prefab.FindByPrefabInstance(prefab.InheritParent);
+						}
+						if (!(parent is null))
+						{
+							prefab.CheckInheritHistory(parent);
+							prefab.InheritFrom(parent!);
+						}
+						else if (force_resolve)
+						{
+							DebugConsole.LogError($"Cannot resolve inheritance of {(prefab as T)!.Identifier} inheriting {prefab.InheritParent.id}!");
+						}
+					}
+					node.Inheritors.ForEach(invokeCallbacksForNode);
                 }
                 RootNodes.ForEach(invokeCallbacksForNode);
             }
         }
 
         private void HandleInheritance(T prefab, bool force_resolve = false)
-        {
+		{
             var inst = new PrefabInstance(prefab.Identifier, prefab.ContentPackage?.Name ?? "");
             HandleInheritance(inst, force_resolve);
         }
@@ -281,13 +281,11 @@ namespace Barotrauma
             Prefab.DisallowCallFromConstructor();
             if (prefabs.TryGetValue(identifier.id, out PrefabSelector<T>? selector))
             {
-                if (identifier.package.IsNullOrEmpty())
-                {
+                if(identifier.package.IsNullOrEmpty()){
                     result = selector!.ActivePrefab;
                     return true;
                 }
-                else
-                {
+                else{
                     foreach (T it in selector)
                     {
                         if (it.ContentPackage!.StringMatches(identifier.package))
@@ -352,7 +350,7 @@ namespace Barotrauma
             return prefabs.ContainsKey(identifier);
         }
 
-        public bool ContainsKey(string k) => prefabs.ContainsKey(k.ToIdentifier());
+        public bool ContainsKey(string k) =>  prefabs.ContainsKey(k.ToIdentifier());
 
         /// <summary>
         /// Determines whether a prefab is implemented as an override or not.
@@ -504,10 +502,10 @@ namespace Barotrauma
             }
             topMostOverrideFile = overrideFiles.Any() ? overrideFiles.First(f1 => overrideFiles.All(f2 => f1.ContentPackage.Index >= f2.ContentPackage.Index)) : null;
             OnSort?.Invoke();
-            // inheritance cannot just work topmost prefab
-            // Mod A have item a, Mod B partially overrides Mod A's a.
-            // If you have Mod B, this doesn't necessarily mean Mod B works correctly
-            AllPrefabs.SelectMany(p => p.Value).ForEach(p => HandleInheritance(p, true));
+			// inheritance cannot just work topmost prefab
+			// Mod A have item a, Mod B partially overrides Mod A's a.
+			// If you have Mod B, this doesn't necessarily mean Mod B works correctly
+			AllPrefabs.SelectMany(p => p.Value).ForEach(p => HandleInheritance(p, true));
             /*
             foreach(T p in this){
                 HandleInheritance(p);

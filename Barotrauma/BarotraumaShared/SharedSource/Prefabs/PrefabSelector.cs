@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -116,12 +116,12 @@ namespace Barotrauma
 
         private void AddInternal(T prefab, bool isOverride)
         {
-            if (isOverride)
+            if (overrides.Exists(p => ReferenceEquals(p.ContentPackage, prefab)))
             {
-                if (overrides.Contains(prefab)) { throw new InvalidOperationException($"Duplicate prefab in PrefabSelector ({typeof(T)}, {prefab.Identifier}, {prefab.ContentFile.ContentPackage.Name})"); }
-                overrides.Add(prefab);
+                throw new InvalidOperationException($"Prefab with same identifier from same package in PrefabSelector ({typeof(T)}, {prefab.Identifier}, {prefab.ContentFile.ContentPackage.Name})");
             }
-            else
+            overrides.Add(prefab);
+            if (!isOverride)
             {
                 if (basePrefabInternal != null)
                 {
@@ -129,8 +129,8 @@ namespace Barotrauma
                     = prefab is MapEntityPrefab mapEntityPrefab
                         ? $"\"{mapEntityPrefab.OriginalName}\", \"{prefab.Identifier}\""
                         : $"\"{prefab.Identifier}\"";
-                    throw new InvalidOperationException(
-                        $"Failed to add the prefab {prefabName} ({prefab.GetType()}) from \"{prefab.ContentPackage?.Name ?? "[NULL]"}\" ({prefab.ContentPackage?.Dir ?? ""}): "
+                    DebugConsole.LogError(
+                        $"Duplicate prefab defaulting to override behavior: {prefabName} ({prefab.GetType()}) from \"{prefab.ContentPackage?.Name ?? "[NULL]"}\" ({prefab.ContentPackage?.Dir ?? ""}): "
                         + $"a prefab with the same identifier from \"{activePrefabInternal!.ContentPackage?.Name ?? "[NULL]"}\" ({activePrefabInternal!.ContentPackage?.Dir ?? ""}) already exists; try overriding");
                 }
                 basePrefabInternal = prefab;
@@ -183,7 +183,8 @@ namespace Barotrauma
             {
                 yield return prefab;
             }
-            if (basePrefab != null) { yield return basePrefab; }
+            // now prefabs are considered default override.
+            //if (basePrefab != null) { yield return basePrefab; }
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

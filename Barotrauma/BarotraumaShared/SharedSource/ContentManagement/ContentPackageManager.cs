@@ -11,6 +11,7 @@ using System.Xml.Linq;
 using Barotrauma.IO;
 using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
+using static Barotrauma.DebugConsole;
 
 namespace Barotrauma
 {
@@ -82,9 +83,8 @@ namespace Barotrauma
                 if (ReferenceEquals(inNewRegular, regular)) { yield break; }
                 if (inNewRegular.SequenceEqual(regular)) { yield break; }
                 ThrowIfDuplicates(inNewRegular);
+
                 var newRegular = inNewRegular
-                    // Refuse to enable packages with load errors
-                    // so people are forced away from broken mods
                     .Where(r => !r.FatalLoadErrors.Any())
                     .ToList();
                 IEnumerable<RegularPackage> toUnload = regular.Where(r => !newRegular.Contains(r));
@@ -152,12 +152,12 @@ namespace Barotrauma
             {
                 if (contentPackage is CorePackage core)
                 {
-                    if (core == Core) { return 0; }
+                    if (core == Core) { return int.MaxValue; }
                     return -1;
                 }
                 else if (contentPackage is RegularPackage reg)
                 {
-                    return Regular.IndexOf(reg) + 1;
+                    return Regular.IndexOf(reg);
                 }
                 return -1;
             }

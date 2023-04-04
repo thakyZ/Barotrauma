@@ -32,16 +32,18 @@ namespace Barotrauma
         public T? GetPrevious(string package_name)
 		{
             bool found = false;
-			foreach (T prefab in this)
-			{
-                if(found) {
-                    return prefab;
-				}
-				if (prefab.ContentPackage?.StringMatches(package_name)??false)
-				{
+            var it = GetEnumerator();
+            while (it.MoveNext()) {
+                if (found)
+                {
+                    return it.Current;
+                }
+                if (it.Current.ContentPackage?.StringMatches(package_name) ?? false)
+                {
                     found = true;
                 }
             }
+
             return null;
 		}
 
@@ -147,7 +149,7 @@ namespace Barotrauma
         private void RemoveInternal(T prefab)
         {
             if (basePrefabInternal == prefab) { basePrefabInternal = null; }
-            else if (overrides.Contains(prefab)) { overrides.Remove(prefab); }
+            if (overrides.Contains(prefab)) { overrides.Remove(prefab); }
             else { throw new InvalidOperationException($"Can't remove prefab from PrefabSelector ({typeof(T)}, {prefab.Identifier}, {prefab.ContentFile.ContentPackage.Name})"); }
             prefab.Dispose();
             SortInternal();
@@ -162,9 +164,7 @@ namespace Barotrauma
 
         private bool ContainsInternal(T prefab) => basePrefabInternal == prefab || overrides.Contains(prefab);
 
-        private int IndexOfInternal(T prefab) => basePrefabInternal == prefab
-            ? overrides.Count
-            : overrides.IndexOf(prefab);
+        private int IndexOfInternal(T prefab) => overrides.IndexOf(prefab);
 
         private bool IsOverrideInternal(T prefab) => IndexOfInternal(prefab) > 0;
         #endregion
@@ -178,6 +178,7 @@ namespace Barotrauma
                 basePrefab = basePrefabInternal;
                 overrideClone = overrides.ToImmutableArray();
             }
+            
             // should be in reverse load order...
             foreach (T prefab in overrideClone)
             {

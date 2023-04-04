@@ -138,6 +138,7 @@ namespace Barotrauma
             FatalLoadErrors = FatalLoadErrors
                 .Concat(errorCatcher.Errors.Select(err => new LoadError(err.Text, null)))
                 .ToImmutableArray();
+            DebugConsole.LogError(string.Join('\n',errorCatcher.Errors.Select(err => err.Text)));
         }
 
         public bool HashMismatches(string expectedHash)
@@ -171,6 +172,18 @@ namespace Barotrauma
 				return Name;
 			}
 		}
+
+        public void ResetErrors() {
+            EnableError = Option.None;
+            FatalLoadErrors = FatalLoadErrors.Clear();
+        }
+
+        // to add xpath error to loading
+        public void AddError(LoadError error)
+        {
+            EnableError = Option.None;
+            FatalLoadErrors = FatalLoadErrors.Add(error);
+        }
 
         public static Result<ContentPackage, Exception> TryLoad(string path)
         {

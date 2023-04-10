@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -149,6 +149,14 @@ namespace Barotrauma
     {
         public static ContentXElement FromContent(this XElement element, ContentPath? contentPath)
             => new ContentXElement(contentPath, element);
+
+        // added for compatiblity with c# mods that target lua and have their own content management.  AKA More Level Content, etc.
+        public static ContentXElement FromPackage(this XElement element, ContentPackage? contentPackage)
+        {
+            DebugConsole.AddWarning("Using FromPackage on xpath. Will not evaluate path changes in inheritance!");
+            
+            return new ContentXElement(ContentPath.FromRawNoConcrete(contentPackage, ""), element);
+        }
 
         public static IEnumerable<ContentXElement> Elements(this IEnumerable<ContentXElement> elements)
             => elements.SelectMany(e => e.Elements());

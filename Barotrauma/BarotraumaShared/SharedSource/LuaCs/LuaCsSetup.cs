@@ -30,7 +30,7 @@ namespace Barotrauma
     {
         public const string LuaSetupFile = "Lua/LuaSetup.lua";
         public const string VersionFile = "luacsversion.txt";
-        public static ContentPackageId LuaForBarotraumaId = new SteamWorkshopId(2856758496);
+        public static ContentPackageId LuaForBarotraumaId = new SteamWorkshopId(2959879186);
         public static ContentPackageId CsForBarotraumaId = new SteamWorkshopId(2795927223);
 
 

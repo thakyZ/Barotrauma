@@ -163,17 +163,17 @@ namespace Barotrauma
             => (UgcId.Fallback(ContentPackageId.NULL).ToString().Equals(workshop_id_or_name) || NameMatches(workshop_id_or_name));
 
         public string GetBestEffortId() {
-			if (UgcId.TryUnwrap(out ContentPackageId? id))
-			{
-				return id.ToString();
-			}
-			else
-			{
-				return Name;
-			}
-		}
-
-        public void ResetErrors() {
+            if (UgcId.TryUnwrap(out ContentPackageId? id))
+            {
+                return id.ToString();
+            }
+            else
+            {
+                return Name;
+            }
+        }
+        public void ResetErrors()
+        {
             EnableError = Option.None;
             FatalLoadErrors = FatalLoadErrors.Clear();
         }
@@ -181,7 +181,6 @@ namespace Barotrauma
         // to add xpath error to loading
         public void AddError(LoadError error)
         {
-            EnableError = Option.None;
             FatalLoadErrors = FatalLoadErrors.Add(error);
         }
 

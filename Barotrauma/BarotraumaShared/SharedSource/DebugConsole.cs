@@ -1917,13 +1917,19 @@ namespace Barotrauma
                         break;
                     case "character":
                         {
-                            CharacterPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out CharacterPrefab res);
-                            elem = res?.ConfigElement.Element;
-                        }
-                        break;
-                    default:
-                        ThrowError($"Only support Item and Character that have IImplementVariants for now!");
-                        return;
+							CharacterPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out CharacterPrefab res);
+							elem = res?.ConfigElement.Element;
+						}
+						break;
+					case "affliction":
+						{
+							AfflictionPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out AfflictionPrefab res);
+							elem = res?.ConfigElement.Element;
+						}
+						break;
+					default:
+						ThrowError($"Only support Item and Character that have IImplementVariants for now!");
+						return;
                 }
                 if (elem != null)
                 {

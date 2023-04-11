@@ -161,20 +161,20 @@ namespace Barotrauma.Steam
         public void Apply()
         {
             ContentPackageManager.EnabledPackages.SetCore(EnabledCorePackage);
-            var items = enabledRegularModsList.Content.Children.Select(c => c.UserData as RegularPackage).OfType<RegularPackage>().ToArray();
-            /* 
+			var items = enabledRegularModsList.Content.Children.Select(c => c.UserData as RegularPackage).OfType<RegularPackage>().ToArray();
+			/* 
             *   Set regular happens after reordering. This have to be removed
             *   so that xpath order fails can be correctly re-resolved.
             */
-            items.ForEach(p =>
-            {
-                if (p.HasAnyErrors) {
-                    p.ResetErrors();
-                }
-            });
-
-            ContentPackageManager.EnabledPackages.SetRegular(items);
-            PopulateInstalledModLists(forceRefreshEnabled: true, refreshDisabled: true);
+			items.ForEach(p =>
+			{
+				if (p.HasAnyErrors)
+				{
+					p.ResetErrors();
+				}
+			});
+			ContentPackageManager.EnabledPackages.SetRegular(items);
+			PopulateInstalledModLists(forceRefreshEnabled: true, refreshDisabled: true);
             ContentPackageManager.LogEnabledRegularPackageErrors();
             enabledCoreDropdown.ButtonTextColor =
                 EnabledCorePackage.HasAnyErrors

@@ -1907,15 +1907,15 @@ namespace Barotrauma
                     filePath = args[2];
                 }
                 XElement elem = null;
-                switch (args[0])
+                switch (args[0].ToLowerInvariant())
                 {
-                    case "Item":
+                    case "item":
                         {
                             ItemPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out ItemPrefab res);
                             elem = res?.ConfigElement.Element;
                         }
                         break;
-                    case "Character":
+                    case "character":
                         {
                             CharacterPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out CharacterPrefab res);
                             elem = res?.ConfigElement.Element;
@@ -1938,7 +1938,12 @@ namespace Barotrauma
                 {
                     ThrowError($"Cannot find {args[0]} with identifier {args[1]}!");
                 }
-            }, null, false));
+            },
+            () => {
+                return new string[][] {
+                    new string[]{ "Item", "Character", "Affliction" }
+                };
+            }, false));
 
             InitProjectSpecific();
 

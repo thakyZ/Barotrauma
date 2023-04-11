@@ -52,7 +52,6 @@ namespace Barotrauma
                     found = true;
                 }
             }
-
             return null;
         }
 

@@ -1926,8 +1926,20 @@ namespace Barotrauma
 							AfflictionPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out AfflictionPrefab res);
 							elem = res?.ConfigElement.Element;
 						}
-						break;
-					default:
+                        break;
+                    case "talenttree":
+                        {
+                            TalentTree.JobTalentTrees.TryGet(args[1].ToIdentifier(), out TalentTree res);
+                            elem = res?.ConfigElement.Element;
+                        }
+                        break;
+                    case "talent":
+                        {
+                            TalentPrefab.TalentPrefabs.TryGet(args[1].ToIdentifier(), out TalentPrefab res);
+                            elem = res?.ConfigElement.Element;
+                        }
+                        break;
+                    default:
 						ThrowError($"Only support Item and Character that have IImplementVariants for now!");
 						return;
                 }
@@ -1946,7 +1958,7 @@ namespace Barotrauma
             }, 
             () => {
                 return new string[][] {
-                    new string[]{ "Item", "Character", "Affliction" }
+                    new string[]{ "Item", "Character", "Affliction", "TalentTree", "Talent" }
                 };
             }, false));
 

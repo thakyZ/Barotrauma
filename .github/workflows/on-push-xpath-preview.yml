@@ -4,7 +4,7 @@ name: On push to master branch
 
 on:
   push:
-    branches: [master]
+    branches: [lua-xpath-1.0.8-otherprefabs]
 
 jobs:
   run-tests:
@@ -15,4 +15,4 @@ jobs:
   publish-release:
     uses: ./.github/workflows/publish-release.yml
     with:
-      tag: "main"
+      tag: "xpath-preview"

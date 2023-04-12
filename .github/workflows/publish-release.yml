@@ -5,10 +5,14 @@ name: Publish release
 on:
   workflow_dispatch:
   workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
 
 env:
   ARTIFACTS_DIR: 2049ef39-42a2-46d2-b513-ee6d2e3a7b15
-  ARCHIVE_BASE_NAME: luacsforbarotrauma
+  ARCHIVE_BASE_NAME: luacsforbarotrauma-${{ inputs.tag }}
   # XXX: these file names are subject to shell expansion.
   # Be careful when using special characters.
   ARCHIVE_FILES_SERVER: |
@@ -138,7 +142,7 @@ jobs:
         uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: latest
+          automatic_release_tag: latest-${{ inputs.tag }}
           prerelease: false
           title: Automatic Build
           files: |

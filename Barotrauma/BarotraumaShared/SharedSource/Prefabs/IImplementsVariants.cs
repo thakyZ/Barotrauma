@@ -53,57 +53,59 @@ namespace Barotrauma
             {
                 throw new InvalidOperationException("PrefabActivator<T> can only take IImplementsInherit types!");
             }
-			if (typeof(T).GetInterfaces().Any(i => i.Name.Contains(nameof(IImplementsVariants<T>))))
-			{
-				throw new InvalidOperationException("PrefabActivator<T> currently does not handle variant logic!");
-			}
-		}
+            if (typeof(T).GetInterfaces().Any(i => i.Name.Contains(nameof(IImplementsVariants<T>))))
+            {
+                throw new InvalidOperationException("PrefabActivator<T> currently does not handle variant logic!");
+            }
+        }
         public PrefabActivator(Identifier identifier, ContentFile file, ContentXElement element, Func<ContentXElement, T> constructorLambda, Func<PrefabActivator<T>, PrefabActivator<T>?> locator,
-		    VariantExtensions.VariantXMLChecker? create_callback = null, Action<T>? onAdd = null) 
+            VariantExtensions.VariantXMLChecker? create_callback = null, Action<T>? onAdd = null)
             : base(file, identifier)
         {
-			originalElement = element;
+            originalElement = element;
             CurrentElement = element;
             constructor = constructorLambda;
             GetParentFunc = locator;
-			OnAdd = onAdd;
+            OnAdd = onAdd;
             inherit_callback = create_callback;
             // we don't need to wait for sortall to resolve.
             if (originalElement.InheritParent().id.IsEmpty) {
-				cached = constructor.Invoke(CurrentElement);
+                cached = constructor.Invoke(CurrentElement);
                 cached_valid = true;
                 is_immutable = true;
-			}
-		}
+            }
+        }
 
         public T? Activate() {
-			if (cached != null && cached_valid)
-			{
-				return cached;
-			}
-			else
-			{
-				DoInherit(inherit_callback);
-				cached = constructor.Invoke(CurrentElement);
-				cached_valid = true;
+            if (cached != null && cached_valid)
+            {
+                return cached;
+            }
+            else
+            {
+                DoInherit(inherit_callback);
+                cached = constructor.Invoke(CurrentElement);
+                cached_valid = true;
                 OnAdd?.Invoke(cached);
-				return cached;
-			}
-		}
+                return cached;
+            }
+        }
 
         public void InvalidateCache(Action<T>? OnRemoved=null) {
             T? current = cached;
             if (!is_immutable) {
-				cached?.Dispose();
-				cached = null;
-				cached_valid = false;
-			}
+                cached?.Dispose();
+                cached = null;
+                cached_valid = false;
+            }
             if (current != null) {
-				OnRemoved?.Invoke(current);
-			}
+                OnRemoved?.Invoke(current);
+            }
         }
 
-		public PrefabInstance InheritParent => originalElement.InheritParent();
+        public T? Current { get => cached; }
+
+        public PrefabInstance InheritParent => originalElement.InheritParent();
 
 		public IEnumerable<PrefabActivator<T>> InheritHistory {
             get {
@@ -199,9 +201,7 @@ namespace Barotrauma
 
         VariantExtensions.VariantXMLChecker? inherit_callback;
 		public override void Dispose(){
-            if (cached != null) { 
-                cached.Dispose();
-            }
+            InvalidateCache();
         }
 
         private Action<T>? OnAdd;

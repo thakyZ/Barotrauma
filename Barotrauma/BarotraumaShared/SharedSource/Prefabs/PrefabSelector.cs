@@ -83,7 +83,7 @@ namespace Barotrauma
 
         public PrefabActivator<T>? GetPreviousActivator(string package_name)
         {
-            if (activator is null) { 
+            if (activator is null) {
                 throw new InvalidOperationException($"GetPreviousActivator does not apply to {typeof(T).FullName}!");
             }
             return activator.GetPrevious(package_name);
@@ -100,7 +100,7 @@ namespace Barotrauma
         }
 
 
-        public void AddDefered(Identifier id, ContentFile file, ContentXElement element, 
+        public void AddDefered(Identifier id, ContentFile file, ContentXElement element,
             Func<ContentXElement, T> constructorLambda,  Func<PrefabActivator<T>, PrefabActivator<T>?> locator,
             VariantExtensions.VariantXMLChecker? inherit_callback, Action<T>? OnAdd, bool isOverride)
         {
@@ -126,18 +126,22 @@ namespace Barotrauma
             else if (activator != null) {
                 using (new WriteLock(rwl))
                 {
-                    for (int i = activator.overrides.Count - 1; i >= 0; i--)
+                    activator.RemoveByFile(file);
+                    // already disposed. Active prefab already resolves to something else.
                     {
-                        var prefab = activator.overrides[i];
-                        if (prefab.ContentFile == file)
+                        for (int i = overrides.Count - 1; i >= 0; i--)
                         {
-                            activator.RemoveInternal(prefab);
+                            var prefab = overrides[i];
+                            if (prefab.ContentFile == file)
+                            {
+                                overrides.Remove(prefab);
+                            }
                         }
-                    }
 
-                    if (activator.basePrefabInternal is { ContentFile: var baseFile } p && baseFile == file)
-                    {
-                        activator.RemoveInternal(activator.basePrefabInternal);
+                        if (basePrefabInternal is { ContentFile: var baseFile } p && baseFile == file)
+                        {
+                            basePrefabInternal = null;
+                        }
                     }
                 }
             }
@@ -196,7 +200,7 @@ namespace Barotrauma
         private readonly List<T> overrides = new List<T>();
 
         // will recursive lock when onAdd is not null and have callback in activate...
-        public T? activePrefabInternal { 
+        public T? activePrefabInternal {
             get {
                 if (activator is null)
                 {
@@ -210,6 +214,20 @@ namespace Barotrauma
                         overrides.Add(current);
                     }
                     return current;
+                }
+            }
+        }
+
+        public T? activePrefabInternal_NoCreate {
+            get
+            {
+                if (activator is null)
+                {
+                    return overrides.Count > 0 ? overrides.First() : basePrefabInternal;
+                }
+                else
+                {
+                    return activator.activePrefabInternal_NoCreate?.Current;
                 }
             }
         }
@@ -248,13 +266,13 @@ namespace Barotrauma
         {
             if (activator != null)
             {
-                if (ActivePrefab != prefab)
+                if (activePrefabInternal_NoCreate != prefab)
                 {
                     throw new InvalidOperationException($"Can't remove concrete prefab that is defered and not current.");
                 }
                 else
                 {
-                    activator.ActivePrefab?.InvalidateCache();
+                    activator.activePrefabInternal_NoCreate?.InvalidateCache();
                     overrides.Remove(prefab);
                 }
             }
@@ -271,7 +289,8 @@ namespace Barotrauma
         private void SortInternal(bool force_resolve = false)
         {
             overrides.Sort((p1, p2) => (p1.ContentPackage?.Index ?? int.MaxValue) - (p2.ContentPackage?.Index ?? int.MaxValue));
-            if (force_resolve && activator!=null) {
+            activator?.SortInternal(force_resolve);
+            if (force_resolve && activator != null) {
                 T? current = activator.ActivePrefab?.Activate();
                 overrides.Clear();
                 if (current != null) {
@@ -281,7 +300,16 @@ namespace Barotrauma
         }
 
         // will recursive lock when onAdd is not null and have callback in activate...
-        public bool isEmptyInternal => basePrefabInternal is null && overrides.Count == 0;
+        public bool isEmptyInternal {
+            get{
+                if(activator == null){
+                    return basePrefabInternal is null && overrides.Count == 0;
+                }
+                else{
+                    return activator.isEmptyInternal;
+                }
+            }
+        }
 
         private bool ContainsInternal(T prefab) => basePrefabInternal == prefab || overrides.Contains(prefab);
 

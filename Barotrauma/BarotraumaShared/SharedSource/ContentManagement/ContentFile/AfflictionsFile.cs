@@ -54,6 +54,7 @@ namespace Barotrauma
                     return;
                 }
 
+                /*
                 if (AfflictionPrefab.Prefabs.ContainsKey(identifier))
                 {
                     if (overriding)
@@ -68,7 +69,7 @@ namespace Barotrauma
                             $"Duplicate affliction: '{identifier}' defined in {elementName} of '{Path}'");
                         return;
                     }
-                }
+                }*/
 
                 var type = afflictionTypes.FirstOrDefault(t =>
                                t.Name == elementName

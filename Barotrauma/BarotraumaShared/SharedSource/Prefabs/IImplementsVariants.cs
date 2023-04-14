@@ -73,6 +73,7 @@ namespace Barotrauma
                 cached = constructor.Invoke(CurrentElement);
                 cached_valid = true;
                 is_immutable = true;
+                OnAdd?.Invoke(cached);
             }
         }
 

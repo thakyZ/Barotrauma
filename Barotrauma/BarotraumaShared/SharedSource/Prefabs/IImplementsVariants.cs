@@ -39,9 +39,9 @@ namespace Barotrauma
 
     public interface IImplementsPartialOverride : IImplementsInherit { }
 
-	public interface IImplementsAnyInherit : IImplementsInherit { }
+    public interface IImplementsAnyInherit : IImplementsInherit { }
 
-	public interface IImplementsActivator { }
+    public interface IImplementsActivator { }
 
     // evaluate T only when sortall happens (force resolve inheritance)
     // inherits from T so that current prefabselector code works with Activators.
@@ -111,74 +111,74 @@ namespace Barotrauma
 
         public PrefabInstance InheritParent => originalElement.InheritParent();
 
-		public IEnumerable<PrefabActivator<T>> InheritHistory {
+        public IEnumerable<PrefabActivator<T>> InheritHistory {
             get {
                 var cur = this;
-				while (cur != null)
+                while (cur != null)
                 {
                     cur = GetParentFunc.Invoke(cur);
-					if (cur is null) break;
-					yield return cur;
-				}
-			}
+                    if (cur is null) break;
+                    yield return cur;
+                }
+            }
         }
 
-		public void CheckInheritHistory(PrefabActivator<T> parent)
-		{
-			if (parent.InheritHistory.Any(p => ReferenceEquals(p, this as T)))
-			{
-				throw new Exception("Inheritance cycle detected: "
-					+ string.Join(", ", InheritHistory.Select(n => "(id: " + n.Identifier.ToString() + ", package: " + n.ContentPackage!.Name + ")"))
-					+ "\n(id: " + (this as T)!.Identifier.ToString() + ", package: " + (this as T)!.ContentPackage?.Name + ")");
-			}
-		}
+        public void CheckInheritHistory(PrefabActivator<T> parent)
+        {
+            if (parent.InheritHistory.Any(p => ReferenceEquals(p, this as T)))
+            {
+                throw new Exception("Inheritance cycle detected: "
+                    + string.Join(", ", InheritHistory.Select(n => "(id: " + n.Identifier.ToString() + ", package: " + n.ContentPackage!.Name + ")"))
+                    + "\n(id: " + (this as T)!.Identifier.ToString() + ", package: " + (this as T)!.ContentPackage?.Name + ")");
+            }
+        }
 
-		public void DoInherit(VariantExtensions.VariantXMLChecker? create_callback)
-		{
-			Stack<ContentXElement> preprocessed = new Stack<ContentXElement>();
-			var last_elem = originalElement;
-			foreach (var it in InheritHistory)
-			{
+        public void DoInherit(VariantExtensions.VariantXMLChecker? create_callback)
+        {
+            Stack<ContentXElement> preprocessed = new Stack<ContentXElement>();
+            var last_elem = originalElement;
+            foreach (var it in InheritHistory)
+            {
                 CheckInheritHistory(it);
-				preprocessed.Push(last_elem.PreprocessInherit(it.originalElement, false));
-				last_elem = preprocessed.Peek();
-			}
-			ContentXElement previous = preprocessed.Pop();
-			while (preprocessed.Any())
-			{
-				previous = preprocessed.Pop().CreateVariantXML(previous, create_callback);
-			}
-			CurrentElement = originalElement.CreateVariantXML(previous, create_callback);
-		}
+                preprocessed.Push(last_elem.PreprocessInherit(it.originalElement, false));
+                last_elem = preprocessed.Peek();
+            }
+            ContentXElement previous = preprocessed.Pop();
+            while (preprocessed.Any())
+            {
+                previous = preprocessed.Pop().CreateVariantXML(previous, create_callback);
+            }
+            CurrentElement = originalElement.CreateVariantXML(previous, create_callback);
+        }
 
         private T? cached = null;
         private bool cached_valid = false;
 
-		private bool is_immutable { get; }
+        private bool is_immutable { get; }
 
         Func<PrefabActivator<T>, PrefabActivator<T>?> GetParentFunc;
 
-		public static PrefabActivator<T>? GetParent_Collection(PrefabActivator<T> current, PrefabCollection<T> collection)
+        public static PrefabActivator<T>? GetParent_Collection(PrefabActivator<T> current, PrefabCollection<T> collection)
         {
             PrefabInstance parent_instance = current.InheritParent;
-			if (parent_instance.id.IsEmpty) {
+            if (parent_instance.id.IsEmpty) {
                 return null;
             }
             else if (parent_instance.package.IsNullOrEmpty())
             {
                 string current_package = current.ContentPackage?.GetBestEffortId()??"0";
                 return collection.GetSelector(parent_instance.id)?.GetPreviousActivator(current_package);
-			}
+            }
             else
             {
                 collection.TryGet(parent_instance, out PrefabActivator<T>? res);
                 return res;
             }
-		}
+        }
 
-		public static PrefabActivator<T>? GetParent_Selector(PrefabActivator<T> current, PrefabSelector<T> selector)
-		{
-			PrefabInstance parent_instance = current.InheritParent;
+        public static PrefabActivator<T>? GetParent_Selector(PrefabActivator<T> current, PrefabSelector<T> selector)
+        {
+            PrefabInstance parent_instance = current.InheritParent;
             if (parent_instance.id.IsEmpty)
             {
                 return null;
@@ -195,23 +195,23 @@ namespace Barotrauma
             {
                 return selector.GetPackageActivator(parent_instance.package);
             }
-		}
+        }
 
-		public ContentXElement originalElement { get; }
+        public ContentXElement originalElement { get; }
 
-		public ContentXElement CurrentElement { get; set; }
+        public ContentXElement CurrentElement { get; set; }
 
-		private Func<ContentXElement, T> constructor;
+        private Func<ContentXElement, T> constructor;
 
         VariantExtensions.VariantXMLChecker? inherit_callback;
-		public override void Dispose(){
+        public override void Dispose(){
             InvalidateCache();
         }
 
         private Action<T>? OnAdd;
-	}
+    }
 
-	public interface IImplementsVariants<T> : IImplementsInherit where T : Prefab
+    public interface IImplementsVariants<T> : IImplementsInherit where T : Prefab
     {
         // direct parent of the prefab
         public PrefabInstance InheritParent => originalElement.InheritParent();
@@ -228,7 +228,7 @@ namespace Barotrauma
                         cur = FindByPrefabInstance(cur.InheritParent) as IImplementsVariants<T>;
                     }
                     T? res = (cur as T);
-					if (res is null) break;
+                    if (res is null) break;
                     yield return res;
                 }
             } 
@@ -309,7 +309,7 @@ namespace Barotrauma
             foreach (ContentXElement change_ctx in inherits)
             {
                 XElement change = change_ctx.Element;
-				string xpath = change.Attribute("sel")?.Value??".";
+                string xpath = change.Attribute("sel")?.Value??".";
                 bool done = false;
                 switch (change.Name.ToString().ToLower())
                 {

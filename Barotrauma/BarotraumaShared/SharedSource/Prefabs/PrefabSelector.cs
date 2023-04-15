@@ -218,7 +218,8 @@ namespace Barotrauma
             }
         }
 
-        public T? activePrefabInternal_NoCreate {
+        public T? activePrefabInternal_NoCreate
+        {
             get
             {
                 if (activator is null)
@@ -290,22 +291,28 @@ namespace Barotrauma
         {
             overrides.Sort((p1, p2) => (p1.ContentPackage?.Index ?? int.MaxValue) - (p2.ContentPackage?.Index ?? int.MaxValue));
             activator?.SortInternal(force_resolve);
-            if (force_resolve && activator != null) {
+            if (force_resolve && activator != null)
+            {
                 T? current = activator.ActivePrefab?.Activate();
                 overrides.Clear();
-                if (current != null) {
+                if (current != null)
+                {
                     overrides.Add(current);
                 }
             }
         }
 
         // will recursive lock when onAdd is not null and have callback in activate...
-        public bool isEmptyInternal {
-            get{
-                if(activator == null){
+        public bool isEmptyInternal
+        {
+            get
+            {
+                if (activator == null)
+                {
                     return basePrefabInternal is null && overrides.Count == 0;
                 }
-                else{
+                else
+                {
                     return activator.isEmptyInternal;
                 }
             }

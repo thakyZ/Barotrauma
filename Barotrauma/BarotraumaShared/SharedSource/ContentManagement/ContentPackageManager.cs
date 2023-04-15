@@ -91,7 +91,8 @@ namespace Barotrauma
                 Range<float> loadingRange = new Range<float>(0.0f, 1.0f);
 
                 bool finished = false;
-                while (!finished) {
+                while (!finished)
+                {
                     // this is in reverse order. this can help inheritance removing wrong package
                     RegularPackage[] toLoad;
                     {
@@ -153,7 +154,8 @@ namespace Barotrauma
                                 newRegular.Remove(p);
                             });
                     }
-                    else {
+                    else
+                    {
                         finished = true;
                     }
                 }

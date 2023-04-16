@@ -83,8 +83,12 @@ namespace Barotrauma
         /// </summary>
         public bool HasMultiplayerSyncedContent { get; }
 
-        protected ContentPackage(XDocument doc, string path)
+        // vanilla's filelist.xml location and %ModDir% logic is different
+        public bool isVanilla;
+
+        protected ContentPackage(XDocument doc, string path, bool isVanilla = false)
         {
+            this.isVanilla = isVanilla;
             using var errorCatcher = DebugConsole.ErrorCatcher.Create();
             
             Path = path.CleanUpPathCrossPlatform();

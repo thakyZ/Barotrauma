@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -30,7 +30,7 @@ namespace Barotrauma
 
     public class CorePackage : ContentPackage
     {
-        public CorePackage(XDocument doc, string path) : base(doc, path)
+        public CorePackage(XDocument doc, string path, bool isVanilla = false) : base(doc, path, isVanilla)
         {
             AssertCondition(doc.Root.GetAttributeBool("corepackage", false), 
                 "Expected a core package, got a regular package");

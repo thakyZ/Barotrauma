@@ -350,7 +350,11 @@ namespace Barotrauma
                     }
 
                     //keep enabled client-side-only mods enabled
-                    regularPackages.AddRange(ContentPackageManager.EnabledPackages.Regular.Where(p => !p.HasMultiplayerSyncedContent && !regularPackages.Contains(p)));
+                    regularPackages =
+                        ContentPackageManager.EnabledPackages.Regular
+                        .Where(p => !p.HasMultiplayerSyncedContent && !regularPackages.Contains(p))
+                        .Concat(regularPackages).Distinct().ToList();
+                    regularPackages.ForEach(p => p.ResetErrors());
 
                     ContentPackageManager.EnabledPackages.BackUp();
                     ContentPackageManager.EnabledPackages.SetCore(corePackage);

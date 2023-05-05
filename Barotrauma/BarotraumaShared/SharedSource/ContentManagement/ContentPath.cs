@@ -147,14 +147,16 @@ namespace Barotrauma
             if (!(parent is null))
             {
                 string dir;
-                if(IsVanilla(parent.ContentPackage))
+                // content packages' filelist.xml sometimes reference other mods' files.
+                // likely core package referencing vanilla files.
+                if (parent.isVanilla || IsVanilla(parent.ContentPackage))
                 {
                     dir = "";
                 }
                 else{
                     dir = parent.ContentPackage?.Dir ?? "";
                 }
-                EvaluateRelativePath(parent.FullPath, dir, IsVanilla(parent.ContentPackage));
+                EvaluateRelativePath(parent.FullPath, dir, parent.isVanilla || IsVanilla(parent.ContentPackage));
             }
         }
 
@@ -178,6 +180,20 @@ namespace Barotrauma
                 }
                 EvaluateRelativePath("", dir, IsVanilla(parent));
             }
+        }
+
+        // content packages' filelist.xml sometimes reference other mods' files.
+        // likely core package referencing vanilla files.
+        private static bool rawvalue_references_vanilla(string? rawValue) {
+            if (rawValue is null) {
+                return false;
+            }
+            string RawValue = rawValue.CleanUpPath();
+            if (RawValue.StartsWith("Content/") || RawValue.StartsWith("Submarines/") || RawValue.StartsWith("Data/"))
+            {
+                return true;
+            }
+            return false;
         }
 
         private void EvaluateRelativePath(string? parent_full_path, string parent_package_path, bool parent_is_vanilla){
@@ -225,6 +241,7 @@ namespace Barotrauma
             {
                 var mod_dir_regex = new Regex("^%ModDir:(.+?)%/(.+?)$", RegexOptions.IgnoreCase);
                 var otherMod = mod_dir_regex.Match(cleanvalue);
+                // relative path
                 if (!otherMod.Success)
                 {
                     if (parent_full_path.IsNullOrEmpty())

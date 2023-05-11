@@ -4,9 +4,14 @@ name: On push to master branch
 
 on:
   push:
-    branches: [lua-xpath-1.0.9-otherprefabs]
+    branches: [lua-xpath-1.0.13-otherprefabs]
 
 jobs:
+  harden-ci-security:
+    uses: ./.github/workflows/harden-ci-security.yml
+    with:
+      ref: ${{ github.event.ref }}
+
   run-tests:
     uses: ./.github/workflows/run-tests.yml
     with:

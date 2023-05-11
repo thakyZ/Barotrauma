@@ -22,6 +22,8 @@ sounds.HighShelfFilter = CreateStatic("Barotrauma.Sounds.HighShelfFilter")
 sounds.PeakFilter = CreateStatic("Barotrauma.Sounds.PeakFilter")
 defaultLib["Sounds"] = sounds
 
+defaultLib["SpriteEffects"] = CreateStatic("Microsoft.Xna.Framework.Graphics.SpriteEffects")
+
 defaultLib["SoundPlayer"] = CreateStatic("Barotrauma.SoundPlayer")
 defaultLib["SoundPrefab"] = CreateStatic("Barotrauma.SoundPrefab", true)
 defaultLib["BackgroundMusic"] = CreateStatic("Barotrauma.BackgroundMusic", true)
@@ -58,6 +60,10 @@ defaultLib["GUI"] = {
     ScissorComponent = CreateStatic("Barotrauma.GUIScissorComponent", true),
     VideoPlayer = CreateStatic("Barotrauma.VideoPlayer", true),
     Graph = CreateStatic("Barotrauma.Graph", true),
+    SerializableEntityEditor = CreateStatic("Barotrauma.SerializableEntityEditor", true),
+    SlideshowPlayer = CreateStatic("Barotrauma.SlideshowPlayer", true),
+    CreditsPlayer = CreateStatic("Barotrauma.CreditsPlayer", true),
+    DragHandle = CreateStatic("Barotrauma.GUIDragHandle", true),
 
     Screen = CreateStatic("Barotrauma.Screen"),
 

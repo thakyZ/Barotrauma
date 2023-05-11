@@ -9,35 +9,7 @@ namespace Barotrauma
 {
     partial class LuaUserData
     {
-        public static Type GetType(string typeName)
-        {
-            if (typeName == null || typeName.Length == 0) { return null; }
-
-            var byRef = false;
-            if (typeName.StartsWith("out ") || typeName.StartsWith("ref "))
-            {
-                typeName = typeName.Remove(0, 4);
-                byRef = true;
-            }
-
-            var type = Type.GetType(typeName);
-            if (type != null) { return byRef ? type.MakeByRefType() : type; }
-            foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                if (CsScriptBase.LoadedAssemblyName.Contains(a.GetName().Name))
-                {
-                    var attrs = a.GetCustomAttributes<AssemblyMetadataAttribute>();
-                    var revision = attrs.FirstOrDefault(attr => attr.Key == "Revision")?.Value;
-                    if (revision != null && int.Parse(revision) != (int)CsScriptBase.Revision[a.GetName().Name]) { continue; }
-                }
-                type = a.GetType(typeName);
-                if (type != null)
-                {
-                    return byRef ? type.MakeByRefType() : type;
-                }
-            }
-            return null;
-        }
+        public static Type GetType(string typeName) => LuaCsSetup.GetType(typeName);
 
         public static IUserDataDescriptor RegisterType(string typeName)
         {
@@ -51,16 +23,16 @@ namespace Barotrauma
             return UserData.RegisterType(type);
         }
 
-        public static IUserDataDescriptor IsRegistered(string typeName)
+        public static bool IsRegistered(string typeName)
         {
             Type type = GetType(typeName);
 
             if (type == null)
             {
-                return null;
+                return false;
             }
 
-            return UserData.GetDescriptorForType(type, true);
+            return UserData.GetDescriptorForType(type, true) != null;
         }
 
         public static void UnregisterType(string typeName, bool deleteHistory = false)

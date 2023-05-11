@@ -184,14 +184,18 @@ jobs:
           done
 
       - name: Publish release
-        uses: ./.github/actions/github-release
+        uses: docker://ghcr.io/anton-yurchenko/git-release:latest
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_NAME: "Automatic Build (${{ inputs.tag }})"
+          CHANGELOG_FILE: "none"
+          ALLOW_EMPTY_CHANGELOG: "true"
+          PRE_RELEASE: "false"
+          DRAFT_RELEASE: "false"
+          UNRELEASED: "update"
+          UNRELEASED_TAG: ${{ inputs.tag }}
         with:
-          automatic_release_tag: latest-${{ inputs.tag }}
-          type: latest
-          prerelease: false
-          title: Automatic Build (${{ inputs.tag }})
-          token: ${{ github.token }}
-          files: |
+          args: |
             ${{ env.ARTIFACTS_DIR }}/${{ env.ARCHIVE_BASE_NAME }}_build_windows.zip
             ${{ env.ARTIFACTS_DIR }}/${{ env.ARCHIVE_BASE_NAME }}_patch_windows_client.zip
             ${{ env.ARTIFACTS_DIR }}/${{ env.ARCHIVE_BASE_NAME }}_patch_windows_server.zip

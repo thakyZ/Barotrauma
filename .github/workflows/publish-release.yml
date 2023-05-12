@@ -190,8 +190,6 @@ jobs:
           RELEASE_NAME: "Automatic Build (${{ inputs.tag }})"
           CHANGELOG_FILE: "none"
           ALLOW_EMPTY_CHANGELOG: "true"
-          PRE_RELEASE: "false"
-          DRAFT_RELEASE: "false"
           UNRELEASED: "update"
           UNRELEASED_TAG: ${{ inputs.tag }}
         with:

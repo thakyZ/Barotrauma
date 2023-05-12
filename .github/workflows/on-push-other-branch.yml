@@ -4,7 +4,7 @@ name: On push to a secondary branch
 
 on:
   push:
-    branches-ignore: ["master","lua-xpath-1.0.13","lua-xpath-1.0.13-otherprefabs"]
+    branches-ignore: ["master","lua-xpath-1.0.13","lua-xpath-1.0.13-preview"]
 
 jobs:
   harden-ci-security:

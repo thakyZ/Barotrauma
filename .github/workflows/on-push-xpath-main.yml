@@ -20,4 +20,5 @@ jobs:
   publish-release:
     uses: ./.github/workflows/publish-release.yml
     with:
-      tag: "xpath-main"
+      target: ${{ github.event.ref }}
+      tag: xpath-main

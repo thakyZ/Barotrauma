@@ -309,12 +309,13 @@ namespace Barotrauma
 
             if (Prefab is AfflictionPrefabHusk huskPrefab)
             {
-                if (huskPrefab.ControlHusk)
+                if (huskPrefab.ControlHusk || GameMain.LuaCs.Game.enableControlHusk)
                 {
 #if SERVER
                     if (client != null)
                     {
                         GameMain.Server.SetClientCharacter(client, husk);
+                        GameMain.LuaCs.Hook.Call("husk.clientControlHusk", new object[] { client, husk });
                     }
 #else
                     if (!character.IsRemotelyControlled && character == Character.Controlled)
@@ -410,7 +411,7 @@ namespace Barotrauma
                 ragdoll.Flip();
             }
 
-            var root = doc.Root.FromPackage(pathToAppendage.ContentPackage);
+            var root = doc.Root.FromContent(pathToAppendage);
             var limbElements = root.GetChildElements("limb").ToDictionary(e => e.GetAttributeString("id", null), e => e);
             //the IDs may need to be offset if the character has other extra appendages (e.g. from gene splicing)
             //that take up the IDs of this appendage

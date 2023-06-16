@@ -1027,6 +1027,9 @@ namespace Barotrauma
                     case "giveskill":
                         giveSkills.Add(new GiveSkill(subElement, parentDebugName));
                         break;
+                    case "luahook":
+                        luaHook.Add(subElement.GetAttributeString("name", ""));
+                        break;
                 }
             }
             InitProjSpecific(element, parentDebugName);
@@ -1501,6 +1504,32 @@ namespace Barotrauma
                 if (lifeTimer <= 0) { return; }
             }
             if (ShouldWaitForInterval(entity, deltaTime)) { return; }
+
+            {
+                if (entity is Item item)
+                {
+                    var result = GameMain.LuaCs.Hook.Call<bool?>("statusEffect.apply." + item.Prefab.Identifier, this, deltaTime, entity, targets, worldPosition);
+
+                    if (result != null && result.Value)
+                        return;
+                }
+
+                if (entity is Character character)
+                {
+                    var result = GameMain.LuaCs.Hook.Call<bool?>("statusEffect.apply." + character.SpeciesName, this, deltaTime, entity, targets, worldPosition);
+
+                    if (result != null && result.Value)
+                        return;
+                }
+            }
+
+            foreach (string luaHooks in luaHook)
+            {
+                var result = GameMain.LuaCs.Hook.Call<bool?>(luaHooks, this, deltaTime, entity, targets, worldPosition);
+
+                if (result != null && result.Value)
+                    return;
+            }
 
             Hull hull = GetHull(entity);
             Vector2 position = GetPosition(entity, targets, worldPosition);

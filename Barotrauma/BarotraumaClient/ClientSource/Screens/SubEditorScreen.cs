@@ -1059,6 +1059,7 @@ namespace Barotrauma
 
             GameSession gameSession = new GameSession(backedUpSubInfo, "", GameModePreset.TestMode, CampaignSettings.Empty, null);
             gameSession.StartRound(null, false);
+
             (gameSession.GameMode as TestGameMode).OnRoundEnd = () =>
             {
                 Submarine.Unload();
@@ -1338,6 +1339,8 @@ namespace Barotrauma
         public override void Select()
         {
             Select(enableAutoSave: true);
+
+            GameMain.LuaCs.Initialize();
         }
 
         public void Select(bool enableAutoSave = true)
@@ -3671,7 +3674,7 @@ namespace Barotrauma
                     {
                         File.Delete(sub.FilePath);
                         ModProject modProject = new ModProject(subPackage);
-                        modProject.RemoveFile(modProject.Files.First(f => ContentPath.FromRaw(subPackage, f.Path) == sub.FilePath));
+                        modProject.RemoveFile(modProject.Files.First(f => ContentPath.FromRawNoConcrete(subPackage, f.Path) == sub.FilePath));
                         modProject.Save(subPackage.Path);
                         ReloadModifiedPackage(subPackage);
                         if (MainSub?.Info != null && MainSub.Info.FilePath == sub.FilePath)

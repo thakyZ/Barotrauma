@@ -13,6 +13,9 @@ using Barotrauma.IO;
 using System.Linq;
 using System.Text;
 using Barotrauma.MapCreatures.Behavior;
+using System.Xml.Linq;
+using System.Xml;
+using System.Data;
 
 namespace Barotrauma
 {
@@ -38,6 +41,7 @@ namespace Barotrauma
 
     static partial class DebugConsole
     {
+        
         public partial class Command
         {
             public readonly string[] names;
@@ -162,7 +166,7 @@ namespace Barotrauma
         private static readonly int messagesPerFile = 800;
         public const string SavePath = "ConsoleLogs";
 
-        private static void AssignOnExecute(string names, Action<string[]> onExecute)
+        public static void AssignOnExecute(string names, Action<string[]> onExecute)
         {
             var matchingCommand = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
             if (matchingCommand == null)
@@ -1893,6 +1897,73 @@ namespace Barotrauma
             commands.Add(new Command("showmonsters", "Permanently unlocks all the monsters in the character editor. Use \"hidemonsters\" to undo.", null, isCheat: true));
             commands.Add(new Command("hidemonsters", "Permanently hides in the character editor all the monsters that haven't been encountered in the game. Use \"showmonsters\" to undo.", null, isCheat: true));
 
+            commands.Add(new Command("dump_prefab_id", "dump_prefab_id [prefab type] [identifier] [file (optional)]", (string[] args) =>
+            {
+                if (args.Length < 2)
+                {
+                    ThrowError($"Invalid arguments!");
+                    return;
+                }
+                string filePath = $"{args[1]}.xml";
+                if (args.Length > 2) {
+                    filePath = args[2];
+                }
+                XElement elem = null;
+                switch (args[0].ToLowerInvariant())
+                {
+                    case "item":
+                        {
+                            ItemPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out ItemPrefab res);
+                            elem = res?.ConfigElement.Element;
+                        }
+                        break;
+                    case "character":
+                        {
+							CharacterPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out CharacterPrefab res);
+							elem = res?.ConfigElement.Element;
+						}
+						break;
+					case "affliction":
+						{
+							AfflictionPrefab.Prefabs.TryGet(args[1].ToIdentifier(), out AfflictionPrefab res);
+							elem = res?.ConfigElement.Element;
+						}
+                        break;
+                    case "talenttree":
+                        {
+                            TalentTree.JobTalentTrees.TryGet(args[1].ToIdentifier(), out TalentTree res);
+                            elem = res?.ConfigElement.Element;
+                        }
+                        break;
+                    case "talent":
+                        {
+                            TalentPrefab.TalentPrefabs.TryGet(args[1].ToIdentifier(), out TalentPrefab res);
+                            elem = res?.ConfigElement.Element;
+                        }
+                        break;
+                    default:
+						ThrowError($"Only support Item and Character that have IImplementVariants for now!");
+						return;
+                }
+                if (elem != null)
+                {
+                    System.Xml.XmlWriterSettings settings = new();
+                    settings.Indent = true;
+                    var writer = System.Xml.XmlWriter.Create(filePath, settings);
+                    elem.WriteTo(writer);
+                    writer.Flush();
+                    writer.Close();
+                }
+                else {
+                    ThrowError($"Cannot find {args[0]} with identifier {args[1]}!");
+                }
+            }, 
+            () => {
+                return new string[][] {
+                    new string[]{ "Item", "Character", "Affliction", "TalentTree", "Talent" }
+                };
+            }, false));
+
             InitProjectSpecific();
 
             commands.Sort((c1, c2) => c1.names[0].CompareTo(c2.names[0]));
@@ -2110,7 +2181,7 @@ namespace Barotrauma
             return null;
         }
 
-        private static void SpawnCharacter(string[] args, Vector2 cursorWorldPos, out string errorMsg)
+        public static void SpawnCharacter(string[] args, Vector2 cursorWorldPos, out string errorMsg)
         {
             errorMsg = "";
             if (args.Length == 0) { return; }
@@ -2214,7 +2285,7 @@ namespace Barotrauma
             }
         }
 
-        private static void SpawnItem(string[] args, Vector2 cursorPos, Character controlledCharacter, out string errorMsg)
+        public static void SpawnItem(string[] args, Vector2 cursorPos, Character controlledCharacter, out string errorMsg)
         {
             errorMsg = "";
             if (args.Length < 1) return;

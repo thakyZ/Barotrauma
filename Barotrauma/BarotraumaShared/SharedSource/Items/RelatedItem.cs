@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Steamworks.Ugc;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -172,9 +173,9 @@ namespace Barotrauma
             {
                 if (item.HasTag(identifier)) { return true; }
             }
-            if (AllowVariants && !item.Prefab.VariantOf.IsEmpty)
+            if (AllowVariants && !(item.Prefab as IImplementsVariants<ItemPrefab>).InheritParent.IsEmpty)
             {
-                if (Identifiers.Contains(item.Prefab.VariantOf)) { return true; }
+                if (Identifiers.Contains((item.Prefab as IImplementsVariants<ItemPrefab>).InheritParent.ToIdentifier())) { return true; }
             }
             return false;
         }
@@ -191,9 +192,9 @@ namespace Barotrauma
             {
                 if (itemPrefab.Tags.Contains(identifier)) { return true; }
             }
-            if (AllowVariants && !itemPrefab.VariantOf.IsEmpty)
+            if (AllowVariants && !(itemPrefab as IImplementsVariants<ItemPrefab>).InheritParent.IsEmpty)
             {
-                if (Identifiers.Contains(itemPrefab.VariantOf)) { return true; }
+                if (Identifiers.Contains((itemPrefab as IImplementsVariants<ItemPrefab>).InheritParent.id)) { return true; }
             }
             return false;
         }

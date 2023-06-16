@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -112,10 +112,15 @@ namespace Barotrauma
                             .Select(p => p.RegularPackage)
                             .OfType<RegularPackage>().ToList();
                     //keep enabled client-side-only mods enabled
-                    regularPackages.AddRange(ContentPackageManager.EnabledPackages.Regular.Where(p => !p.HasMultiplayerSyncedContent && !regularPackages.Contains(p)));
+                    regularPackages= 
+                        ContentPackageManager.EnabledPackages.Regular
+                            .Where(p => !p.HasMultiplayerSyncedContent && !regularPackages.Contains(p))
+                            .Concat(regularPackages).Distinct().ToList();
+                    regularPackages.ForEach(p => p.ResetErrors());
                     ContentPackageManager.EnabledPackages.SetRegular(regularPackages);
                 }
                 GameMain.NetLobbyScreen.Select();
+                GameMain.LuaCs.CheckInitialize();
                 return;
             }
 
@@ -345,7 +350,11 @@ namespace Barotrauma
                     }
 
                     //keep enabled client-side-only mods enabled
-                    regularPackages.AddRange(ContentPackageManager.EnabledPackages.Regular.Where(p => !p.HasMultiplayerSyncedContent && !regularPackages.Contains(p)));
+                    regularPackages =
+                        ContentPackageManager.EnabledPackages.Regular
+                        .Where(p => !p.HasMultiplayerSyncedContent && !regularPackages.Contains(p))
+                        .Concat(regularPackages).Distinct().ToList();
+                    regularPackages.ForEach(p => p.ResetErrors());
 
                     ContentPackageManager.EnabledPackages.BackUp();
                     ContentPackageManager.EnabledPackages.SetCore(corePackage);
@@ -363,6 +372,7 @@ namespace Barotrauma
                     }
                     GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, GameMain.Client.ServerSubmarines);
                     GameMain.NetLobbyScreen.Select();
+                    GameMain.LuaCs.Initialize();
                 }
             }
         }

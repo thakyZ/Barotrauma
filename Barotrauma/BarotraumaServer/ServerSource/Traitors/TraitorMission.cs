@@ -92,6 +92,13 @@ namespace Barotrauma
                 var traitorCandidates = new List<Tuple<Client, Character>>();
                 foreach (Client c in server.ConnectedClients)
                 {
+                    var result = GameMain.LuaCs.Hook.Call<bool?>("traitor.findTraitorCandidate", c, team);
+					if (result != null && result.Value)
+					{
+                        traitorCandidates.Add(Tuple.Create(c, c.Character));
+                        continue;
+                    }
+
                     if (c.Character == null || c.Character.IsDead || c.Character.Removed || !traitorRoleFilter(c.Character) ||
                         (team != CharacterTeamType.None && c.Character.TeamID != team))
                     {

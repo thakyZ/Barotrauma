@@ -200,7 +200,7 @@ namespace Barotrauma
     /// </Afflictions>
     /// </code>
     /// </example>
-    class AfflictionPrefab : PrefabWithUintIdentifier
+    class AfflictionPrefab : PrefabWithUintIdentifier, IImplementsAnyInherit
     {
         /// <summary>
         /// Effects are the primary way to add functionality to afflictions.
@@ -622,7 +622,7 @@ namespace Barotrauma
 
         public override void Dispose() { }
 
-        private readonly ContentXElement configElement;
+        public readonly ContentXElement ConfigElement;
 
         public readonly LocalizedString Name;
         
@@ -763,6 +763,7 @@ namespace Barotrauma
         /// </summary>
         public readonly float DamageOverlayAlpha;
 
+        /// </summary>
         /// Steam achievement given when the controlled character receives the affliction.
         /// </summary>
         public readonly Identifier AchievementOnReceived;
@@ -858,7 +859,7 @@ namespace Barotrauma
 
         public AfflictionPrefab(ContentXElement element, AfflictionsFile file, Type type) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
-            configElement = element;
+            ConfigElement = element;
             
             AfflictionType = element.GetAttributeIdentifier("type", "");
             TranslationIdentifier = element.GetAttributeIdentifier("translationoverride", Identifier);
@@ -1006,7 +1007,7 @@ namespace Barotrauma
         public void LoadEffects()
         {
             ClearEffects();
-            foreach (var subElement in configElement.Elements())
+            foreach (var subElement in ConfigElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {

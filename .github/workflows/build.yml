@@ -13,8 +13,10 @@ on:
 env:
   CI_DIR: 717a3c49-f5dc-42eb-b332-fcf2988d00e3
   TOOLS_DIR: c1c0ee3b-b22f-451f-b330-8f6337a38fd7
-  PUBLICIZED_ASSEMBLIES: |
+  PUBLICIZED_CLIENT: |
     Barotrauma.dll
+    DedicatedServer.dll
+  PUBLICIZED_SERVER: |
     DedicatedServer.dll
   RELEASES: |
     windows:client:Deploy/bin/content/Windows/Client
@@ -80,9 +82,19 @@ jobs:
               # XXX: assembly-publicizer supports processing assemblies in
               # parallel, but it aborts the entire process if it encounters
               # an invalid .NET assembly.
+              if [[ "$side" == "client" ]]; then
               parallel "$tools_dir/asmpub/assembly-publicizer" \
                 {} -f --strip -o Publicized \
-                ::: ${PUBLICIZED_ASSEMBLIES[@]}
+                ::: ${PUBLICIZED_CLIENT[@]}
+              elif [[ "$side" == "server" ]]; then
+              parallel "$tools_dir/asmpub/assembly-publicizer" \
+                {} -f --strip -o Publicized \
+                ::: ${PUBLICIZED_SERVER[@]}
+              else
+                echo "Invalid side: $side"
+                exit 1
+              fi
+
             )
           done
 

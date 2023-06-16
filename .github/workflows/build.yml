@@ -17,6 +17,12 @@ env:
     Barotrauma.dll
     DedicatedServer.dll
   RELEASES: |
+    windows:client:Windows/Client
+    windows:server:Windows/Server
+    linux:client:Linux/Client
+    linux:server:Linux/Server
+    mac:client:Mac/Client/Barotrauma.app/Contents/MacOS
+    mac:server:Mac/Server
     windows:Deploy/bin/content/Windows
     linux:Deploy/bin/content/Linux
     mac:Deploy/bin/content/Mac

@@ -76,7 +76,7 @@ jobs:
           for i in "${!RELEASES[@]}"; do
             [[ -z "${RELEASES[i]}" ]] && continue
             (
-              IFS=':' read platform publish_dir _rest <<< "${RELEASES[i]}"
+              IFS=':' read platform side publish_dir _rest <<< "${RELEASES[i]}"
               cd "$publish_dir"
               echo "Publicizing assemblies for $platform build"
               mkdir Publicized

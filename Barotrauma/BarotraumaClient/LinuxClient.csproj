@@ -204,4 +204,9 @@
   </PropertyGroup>
   <Import Project="../BarotraumaShared/DeployGameAnalytics.props" />
 
+  <Import Project="../BarotraumaShared/Luatrauma.props" />
+  <ItemGroup>
+    <None Include="../BarotraumaShared/Luatrauma.props" />
+  </ItemGroup>
+
 </Project>

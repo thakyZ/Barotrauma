@@ -12,6 +12,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.MapCreatures.Behavior;
+using MoonSharp.Interpreter;
 using System.Collections.Immutable;
 using Barotrauma.Abilities;
 
@@ -1158,6 +1159,8 @@ namespace Barotrauma
 
             if (Components.Any(ic => ic is Wire) && Components.All(ic => ic is Wire || ic is Holdable)) { isWire = true; }
             if (HasTag("logic")) { isLogic = true; }
+
+            GameMain.LuaCs.Hook.Call("item.created", this);
 
             ApplyStatusEffects(ActionType.OnSpawn, 1.0f);
             RecalculateConditionValues();
@@ -2829,6 +2832,10 @@ namespace Barotrauma
             }
 
             if (condition <= 0.0f) { return; }
+
+            var should = GameMain.LuaCs.Hook.Call<bool?>("item.use", new object[] { this, character, targetLimb });
+
+            if (should != null && should.Value) { return; }
         
             bool remove = false;
 
@@ -2860,6 +2867,11 @@ namespace Barotrauma
         public void SecondaryUse(float deltaTime, Character character = null)
         {
             if (condition <= 0.0f) { return; }
+
+            var should = GameMain.LuaCs.Hook.Call<bool?>("item.secondaryUse", this, character);
+
+            if (should != null && should.Value)
+                return;
 
             bool remove = false;
 
@@ -3202,6 +3214,10 @@ namespace Barotrauma
                     allowEditing = false;
                 }
             }
+
+            var result = GameMain.LuaCs.Hook.Call<bool?>("item.readPropertyChange", this, property, parentObject, allowEditing, sender);
+            if (result != null && result.Value)
+                return;
 
             Type type = property.PropertyType;
             string logValue = "";
@@ -3718,6 +3734,8 @@ namespace Barotrauma
                 body.Remove();
                 body = null;
             }
+
+            GameMain.LuaCs.Hook.Call("item.removed", this);
         }
 
         public override void Remove()
@@ -3802,6 +3820,8 @@ namespace Barotrauma
             }
 
             RemoveProjSpecific();
+
+            GameMain.LuaCs.Hook.Call("item.removed", this);
         }
 
         private void RemoveFromLists()

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -235,5 +235,10 @@
     <GARuntime>win-x64</GARuntime>
   </PropertyGroup>
   <Import Project="../BarotraumaShared/DeployGameAnalytics.props" />
+
+  <Import Project="../BarotraumaShared/Luatrauma.props" />
+  <ItemGroup>
+    <None Include="../BarotraumaShared/Luatrauma.props" />
+  </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -19,21 +19,54 @@ namespace Barotrauma
         {
             Type t = typeof(T);
             Assembly assembly = typeof(T).Assembly;
-            if (!cachedNonAbstractTypes.ContainsKey(assembly))
+            lock (cachedNonAbstractTypes) 
             {
-                cachedNonAbstractTypes[assembly] = assembly.GetTypes()
-                    .Where(t => !t.IsAbstract).ToImmutableArray();
+                if (!cachedNonAbstractTypes.ContainsKey(assembly))
+                {
+                    AddNonAbstractAssemblyTypes(assembly);
+                }
+            }
 
-                cachedDerivedNonAbstract[assembly] = new Dictionary<Type, ImmutableArray<Type>>();
-            }
-            if (cachedDerivedNonAbstract[assembly].TryGetValue(t, out var cachedArray))
-            {
-                return cachedArray;
-            }
-            var newArray = cachedNonAbstractTypes[assembly].Where(t2 => t2.IsSubclassOf(t)).ToImmutableArray();
-            cachedDerivedNonAbstract[assembly].Add(t, newArray);
-            return newArray;
+            #warning TODO: Add safety checks in case an assembly is unloaded without being removed from the cache.
+            return cachedNonAbstractTypes.Values.SelectMany(s => s.Where(t => t.IsSubclassOf(typeof(T))));
         }
+
+        /// <summary>
+        /// Adds an assembly's Non-Abstract Types to the cache for Barotrauma's Type lookup. 
+        /// </summary>
+        /// <param name="assembly">Assembly to be added</param>
+        /// <param name="overwrite">Whether or not to overwrite an entry if the assembly already exists within it.</param>
+        public static void AddNonAbstractAssemblyTypes(Assembly assembly, bool overwrite = false)
+        {
+            if (cachedNonAbstractTypes.ContainsKey(assembly))
+            {
+                if (!overwrite)
+                {
+                    DebugConsole.LogError(
+                        $"ReflectionUtils::AddNonAbstractAssemblyTypes() | The assembly [{assembly.GetName()}] already exists in the cache.");
+                    return;
+                }
+                cachedNonAbstractTypes.Remove(assembly);
+            }
+
+            try
+            {
+                if (!cachedNonAbstractTypes.TryAdd(assembly, assembly.GetTypes().Where(t => !t.IsAbstract).ToImmutableArray()))
+                {
+                    DebugConsole.LogError($"ReflectionUtils::AddNonAbstractAssemblyTypes() | Unable to add types from Assembly to cache.");
+                }
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                DebugConsole.LogError($"ReflectionUtils::AddNonAbstractAssemblyTypes() | RTFException: Unable to load Assembly Types from {assembly.GetName()}.");
+            }
+        }
+
+        /// <summary>
+        /// Removes an assembly from the cache for Barotrauma's Type lookup.
+        /// </summary>
+        /// <param name="assembly">Assembly to remove.</param>
+        public static void RemoveAssemblyFromCache(Assembly assembly) => cachedNonAbstractTypes.Remove(assembly);
 
         public static Option<TBase> ParseDerived<TBase, TInput>(TInput input) where TInput : notnull where TBase : notnull
         {

@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: Run tests
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        required: true
+        type: string
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        with:
+          repository: ${{ inputs.repository }}
+          ref: ${{ inputs.target }}
+          submodules: recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@3447fd6a9f9e57506b15f895c5b76d3b197dc7c2 # v3.2.0
+        with:
+          dotnet-version: |
+            6.0.x
+
+      - name: Initialize environment
+        run: |
+          mkdir -p ~/".local/share/Daedalic Entertainment GmbH/Barotrauma"
+
+      - name: Run tests
+        continue-on-error: true
+        run: |
+          set +e
+          dotnet test LinuxSolution.sln -clp:"ErrorsOnly;Summary" --logger "trx;LogFileName=$PWD/test-results.trx"
+          echo "EXITCODE=$?" >> "$GITHUB_ENV"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+        with:
+          name: test-results
+          path: test-results.trx
+
+      - name: Set exit code
+        run: exit "$EXITCODE"

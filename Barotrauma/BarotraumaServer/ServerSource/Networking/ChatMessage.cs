@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using MoonSharp.Interpreter;
 
 namespace Barotrauma.Networking
 {
@@ -133,6 +134,13 @@ namespace Barotrauma.Networking
                 return;
             }
 
+            var should = GameMain.LuaCs.Hook.Call<bool?>("chatMessage", txt, c, type);
+
+            if (should != null && should.Value)
+            {
+                return;
+            }
+
             if (type == ChatMessageType.Order)
             {
                 if (c.Character == null || c.Character.SpeechImpediment >= 100.0f || c.Character.IsDead) { return; }
@@ -175,6 +183,8 @@ namespace Barotrauma.Networking
             {
                 GameMain.Server.SendChatMessage(txt, senderClient: c, chatMode: chatMode);
             }
+
+
         }
 
         public int EstimateLengthBytesServer(Client c)
@@ -182,7 +192,7 @@ namespace Barotrauma.Networking
             int length = 1 + //(byte)ServerNetObject.CHAT_MESSAGE
                             2 + //(UInt16)NetStateID
                             1 + //(byte)Type
-                            Encoding.UTF8.GetBytes(Text).Length + 2;
+                            (Text == null ? 0 : Encoding.UTF8.GetBytes(Text).Length) + 2;
             
             if (SenderClient != null)
             {

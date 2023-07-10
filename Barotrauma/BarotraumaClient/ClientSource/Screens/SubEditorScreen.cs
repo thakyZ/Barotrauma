@@ -1059,6 +1059,7 @@ namespace Barotrauma
 
             GameSession gameSession = new GameSession(backedUpSubInfo, "", GameModePreset.TestMode, CampaignSettings.Empty, null);
             gameSession.StartRound(null, false);
+
             (gameSession.GameMode as TestGameMode).OnRoundEnd = () =>
             {
                 Submarine.Unload();
@@ -1338,6 +1339,8 @@ namespace Barotrauma
         public override void Select()
         {
             Select(enableAutoSave: true);
+
+            GameMain.LuaCs.Initialize();
         }
 
         public void Select(bool enableAutoSave = true)

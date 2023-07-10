@@ -32,6 +32,9 @@ namespace Barotrauma
     {
         public readonly static List<Character> CharacterList = new List<Character>();
 
+        public static int CharacterUpdateInterval = 1;
+        private static int characterUpdateTick = 1;
+        
         public const float MaxHighlightDistance = 150.0f;
         public const float MaxDragDistance = 200.0f;
 
@@ -1225,6 +1228,9 @@ namespace Barotrauma
                 Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(newCharacter));
             }
 #endif
+
+            GameMain.LuaCs.Hook.Call("character.created", new object[] { newCharacter });
+
             return newCharacter;
         }
 
@@ -1662,6 +1668,7 @@ namespace Barotrauma
                 }
             }
             info.Job?.GiveJobItems(this, spawnPoint);
+            GameMain.LuaCs.Hook.Call("character.giveJobItems", this, spawnPoint);
         }
 
         public void GiveIdCardTags(WayPoint spawnPoint, bool createNetworkEvent = false)
@@ -3010,10 +3017,22 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = 0; i < CharacterList.Count; i++)
+            characterUpdateTick++;
+
+            if (characterUpdateTick % CharacterUpdateInterval == 0)
             {
-                var character = CharacterList[i];
-                System.Diagnostics.Debug.Assert(character != null && !character.Removed);
+                for (int i = 0; i < CharacterList.Count; i++)
+                {
+                    if (GameMain.LuaCs.Game.UpdatePriorityCharacters.Contains(CharacterList[i])) continue;
+
+                    CharacterList[i].Update(deltaTime * CharacterUpdateInterval, cam);
+                }
+            }
+
+            foreach (Character character in GameMain.LuaCs.Game.UpdatePriorityCharacters)
+            {
+                if (character.Removed) { continue; }
+
                 character.Update(deltaTime, cam);
             }
         }
@@ -4508,6 +4527,7 @@ namespace Barotrauma
                 SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);
             }
 
+            GameMain.LuaCs.Hook.Call("character.death", this, causeOfDeathAffliction);
             KillProjSpecific(causeOfDeath, causeOfDeathAffliction, log);
 
             if (info != null)

@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
         private float range;
 
         private int channel;
-        
+
         private float chatMsgCooldown;
 
         private string prevSignal;
@@ -200,6 +200,11 @@ namespace Barotrauma.Items.Components
 
         public void TransmitSignal(Signal signal, bool sentFromChat)
         {
+            var should = GameMain.LuaCs.Hook.Call<bool?>("wifiSignalTransmitted", this, signal, sentFromChat);
+
+            if (should != null && should.Value)
+                return;
+
             if (sentFromChat)
             {
                 item.LastSentSignalRecipients.Clear();
@@ -285,15 +290,15 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            if (chatMsgSent) 
-            { 
+            if (chatMsgSent)
+            {
                 chatMsgCooldown = MinChatMessageInterval;
                 IsActive = true;
             }
 
             prevSignal = signal.value;
         }
-                
+
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (connection == null) { return; }

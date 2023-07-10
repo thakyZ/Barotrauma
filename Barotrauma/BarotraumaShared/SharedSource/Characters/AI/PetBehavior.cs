@@ -460,8 +460,8 @@ namespace Barotrauma
                 var inventoryElement = subElement.Element("inventory");
                 if (inventoryElement != null)
                 {
-                    pet.SpawnInventoryItems(pet.Inventory, inventoryElement.FromPackage(null));
-                }                
+                    pet.SpawnInventoryItems(pet.Inventory, inventoryElement.FromContent(ContentPath.Empty));
+                }
             }
         }
     }

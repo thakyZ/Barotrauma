@@ -20,3 +20,4 @@ jobs:
     with:
       target: ${{ github.event.ref }}
       tag: latest
+      

@@ -122,7 +122,7 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes, description: "Identifier or tag of the item the character's items are placed inside when the character despawns."), Editable]
         public Identifier DespawnContainer { get; private set; }
 
-        public readonly CharacterFile File;
+        public readonly CharacterPrefab characterPrefab;
 
         public XDocument VariantFile { get; private set; }
 
@@ -135,9 +135,9 @@ namespace Barotrauma
         public HealthParams Health { get; private set; }
         public AIParams AI { get; private set; }
 
-        public CharacterParams(CharacterFile file)
+        public CharacterParams(CharacterPrefab prefab)
         {
-            File = file;
+            characterPrefab = prefab;
             Load();
         }
 
@@ -145,15 +145,14 @@ namespace Barotrauma
 
         public override ContentXElement MainElement => base.MainElement.IsOverride() ? base.MainElement.FirstElement() : base.MainElement;
 
-        public static XElement CreateVariantXml(XElement variantXML, XElement baseXML)
+        public static void CreateVariantXml_callback(XElement newXml, XElement variantXML, XElement baseXML)
         {
-            XElement newXml = variantXML.CreateVariantXML(baseXML);
             XElement variantAi = variantXML.GetChildElement("ai");
             XElement baseAi = baseXML.GetChildElement("ai");
             if (baseAi is null || baseAi.Elements().None()
                 || variantAi is null || variantAi.Elements().None())
             {
-                return newXml;
+                return;
             }
             // CreateVariantXML seems to merge the ai targets so that in the new xml we have both the old and the new target definitions.
             var finalAiElement = newXml.GetChildElement("ai");
@@ -175,24 +174,24 @@ namespace Barotrauma
                     aiTarget.ReplaceWith(new XElement(matchInSelf));
                 }
             }
-            return newXml;
         }
         
         public bool Load()
         {
-            UpdatePath(File.Path);
+            UpdatePath(characterPrefab.ContentFile.Path);
             doc = XMLExtensions.TryLoadXml(Path);
-            Identifier variantOf = MainElement.VariantOf();
-            if (!variantOf.IsEmpty)
+            if (!MainElement.InheritParent().IsEmpty)
             {
                 VariantFile = new XDocument(doc);
-                #warning TODO: determine that CreateVariantXML is equipped to do this
-                XElement newRoot = CreateVariantXml(MainElement, CharacterPrefab.FindBySpeciesName(variantOf).ConfigElement);
+#warning TODO: determine that CreateVariantXML is equipped to do this
+#warning TODO: preprocess xml according to inheritance tree (XPath), for now it seems result is unused.
+                XElement newRoot = (characterPrefab as IImplementsVariants<CharacterPrefab>).DoInherit(CreateVariantXml_callback);
                 var oldElement = MainElement;
-                var parentElement = (XContainer)oldElement.Parent ?? doc; oldElement.Remove(); parentElement.Add(newRoot);
+                var parentElement = (XContainer)oldElement.Parent ?? doc; oldElement.Remove();
+                parentElement.Add(newRoot);
             }
             IsLoaded = Deserialize(MainElement);
-            OriginalElement = new XElement(MainElement).FromPackage(Path.ContentPackage);
+            OriginalElement = new XElement(MainElement).FromContent(Path);
             if (SpeciesName.IsEmpty && MainElement != null)
             {
                 //backwards compatibility
@@ -887,7 +886,7 @@ namespace Barotrauma
                 return new XElement("target",
                             new XAttribute("tag", tag),
                             new XAttribute("state", state),
-                            new XAttribute("priority", priority)).FromPackage(character.File.ContentPackage);
+                            new XAttribute("priority", priority)).FromContent(character.characterPrefab.FilePath);
             }
         }
 
@@ -901,7 +900,7 @@ namespace Barotrauma
             public CharacterParams Character { get; private set; }
 
             protected ContentXElement CreateElement(string name, params object[] attrs)
-                => new XElement(name, attrs).FromPackage(Element.ContentPackage);
+                => new XElement(name, attrs).FromContent(Element.ContentPath);
             
             public SubParam(ContentXElement element, CharacterParams character)
             {

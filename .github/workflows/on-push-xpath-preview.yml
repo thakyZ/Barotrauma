@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: On push to master branch
+
+on:
+  push:
+    branches: [lua-xpath-1.0.21-preview]
+
+jobs:
+  run-tests:
+    uses: ./.github/workflows/run-tests.yml
+    with:
+      target: ${{ github.event.ref }}
+
+  publish-release:
+    uses: ./.github/workflows/publish-release.yml
+    with:
+      target: ${{ github.event.ref }}
+      tag: "xpath-preview"

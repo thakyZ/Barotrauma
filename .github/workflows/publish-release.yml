@@ -28,7 +28,7 @@ env:
     linux:server:Linux/Server
     mac:client:Mac/Client/Barotrauma.app/Contents/MacOS
     mac:server:Mac/Server
-  ARCHIVE_BASE_NAME: luacsforbarotrauma
+  ARCHIVE_BASE_NAME: luacsforbarotrauma-${{ inputs.tag }}
   # XXX: these file names are subject to shell expansion.
   # Be careful when using special characters.
   ARCHIVE_FILES_SERVER: |

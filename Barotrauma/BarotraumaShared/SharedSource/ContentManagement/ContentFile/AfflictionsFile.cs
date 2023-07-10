@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -54,6 +54,7 @@ namespace Barotrauma
                     return;
                 }
 
+                /*
                 if (AfflictionPrefab.Prefabs.ContainsKey(identifier))
                 {
                     if (overriding)
@@ -68,14 +69,22 @@ namespace Barotrauma
                             $"Duplicate affliction: '{identifier}' defined in {elementName} of '{Path}'");
                         return;
                     }
-                }
+                }*/
 
                 var type = afflictionTypes.FirstOrDefault(t =>
                                t.Name == elementName
                                || t.Name == $"Affliction{elementName}".ToIdentifier())
                            ?? typeof(Affliction);
+                AfflictionPrefab.Prefabs.AddDefered(element.GetAttributeIdentifier("identifier", ""), this, element,
+                    (elem) => {
+                        return CreatePrefab(elem, type);
+                    },
+                    (current) => PrefabActivator<AfflictionPrefab>.GetParent_Collection(current, AfflictionPrefab.Prefabs),
+                    null, null, overriding
+                );
+                /*
                 var prefab = CreatePrefab(element, type);
-                AfflictionPrefab.Prefabs.Add(prefab, overriding);
+                AfflictionPrefab.Prefabs.Add(prefab, overriding);*/
             }
         }
         
@@ -83,7 +92,7 @@ namespace Barotrauma
         {
             XDocument doc = XMLExtensions.TryLoadXml(Path);
             if (doc?.Root is null) { return; }
-            ParseElement(doc.Root.FromPackage(ContentPackage), overriding: false);
+            ParseElement(doc.Root.FromContent(Path), overriding: false);
         }
 
         private AfflictionPrefab CreatePrefab(ContentXElement element, Type type)
@@ -104,9 +113,9 @@ namespace Barotrauma
         public override void Sort()
         {
 #if CLIENT
-            CharacterHealth.DamageOverlayPrefab.Prefabs.Sort();
+            CharacterHealth.DamageOverlayPrefab.Prefabs.Sort(true);
 #endif
-            CPRSettings.Prefabs.Sort();
+            CPRSettings.Prefabs.Sort(true);
             AfflictionPrefab.Prefabs.SortAll();
         }
     }

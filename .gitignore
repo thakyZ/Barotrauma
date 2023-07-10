@@ -12,6 +12,7 @@ bld/
 [Dd]ebug*/
 [Rr]elease*/
 *.o
+*.user
 */Barotrauma*/doc/
 
 # Misc vs crap

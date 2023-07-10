@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    class TalentPrefab : PrefabWithUintIdentifier
+    class TalentPrefab : PrefabWithUintIdentifier, IImplementsInherit
     {
         public string OriginalName => Identifier.Value;
 
@@ -36,7 +36,7 @@ namespace Barotrauma
             private set;
         }
 
-        public TalentPrefab(ContentXElement element, TalentsFile file) : base(file, element.GetAttributeIdentifier("identifier", Identifier.Empty))
+        public TalentPrefab(ContentXElement element, TalentsFile file) : base(file, element)
         {
             ConfigElement = element;
 

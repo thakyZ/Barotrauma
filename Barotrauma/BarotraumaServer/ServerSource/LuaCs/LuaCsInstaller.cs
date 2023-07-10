@@ -36,9 +36,8 @@ namespace Barotrauma
                     "System.Reflection.Metadata.dll", "System.Collections.Immutable.dll",
                     "System.Runtime.CompilerServices.Unsafe.dll"
                 };
-                filesToCopy = filesToCopy.Concat(Directory.EnumerateFiles(path, "*.dll", SearchOption.AllDirectories)
-                    .Where(s => s.Contains("mscordaccore_amd64_amd64")).Select(s => Path.GetFileName(s))).ToArray();
-
+                filesToCopy = filesToCopy.Concat(Directory.EnumerateFiles(path, "*.dll", SearchOption.TopDirectoryOnly)
+                        .Concat(Directory.EnumerateFiles(path, "*.json", SearchOption.TopDirectoryOnly)).Select(s => Path.GetFileName(s))).ToArray();
                 CreateMissingDirectory();
 
                 File.Move("Barotrauma.dll", "Temp/Original/Barotrauma.dll", true);
@@ -59,7 +58,7 @@ namespace Barotrauma
                 }
 
                 File.WriteAllText(LuaCsSetup.VersionFile, luaPackage.ModVersion);
-                File.WriteAllText("LuaDedicatedServer.bat", "\"%LocalAppData%/Daedalic Entertainment GmbH/Barotrauma/WorkshopMods/Installed/2559634234/Binary/DedicatedServer.exe\"");
+                File.WriteAllText("LuaDedicatedServer.bat", $"\"%LocalAppData%/Daedalic Entertainment GmbH/Barotrauma/WorkshopMods/Installed/{LuaCsSetup.LuaForBarotraumaId}/Binary/DedicatedServer.exe\"");
             }
             catch (UnauthorizedAccessException e)
             {

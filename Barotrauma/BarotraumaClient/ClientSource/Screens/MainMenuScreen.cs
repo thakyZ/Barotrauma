@@ -53,7 +53,7 @@ namespace Barotrauma
         private readonly GUIButton modsButton, modUpdatesButton;
         private (DateTime WhenToRefresh, int Count) modUpdateStatus = (DateTime.Now, 0);
         private static readonly TimeSpan ModUpdateInterval = TimeSpan.FromSeconds(60.0f);
-        
+
         private readonly GameMain game;
 
         private GUIImage playstyleBanner;
@@ -140,7 +140,7 @@ namespace Barotrauma
                 {
                     GUIComponent.FromXML(subElement.FromPackage(null), remoteContentContainer.RectTransform);
                 }
-            }   
+            }
 #else
             FetchRemoteContent();
 #endif
@@ -150,7 +150,7 @@ namespace Barotrauma
 
             // === CAMPAIGN
             var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
-       
+
             new GUIImage(new RectTransform(new Vector2(0.2f, 0.7f), campaignHolder.RectTransform), "MainMenuCampaignIcon")
             {
                 CanBeFocused = false
@@ -276,7 +276,7 @@ namespace Barotrauma
 
             modsButtonContainer = new GUIFrame(new RectTransform(Vector2.One, customizeList.RectTransform),
                 style: null);
-            
+
             modsButton = new GUIButton(new RectTransform(Vector2.One, modsButtonContainer.RectTransform),
                 TextManager.Get("settingstab.mods"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
@@ -297,7 +297,7 @@ namespace Barotrauma
                 },
                 Visible = false
             };
-            
+
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
@@ -433,7 +433,7 @@ namespace Barotrauma
 
             string version = File.Exists(LuaCsSetup.VersionFile) ? File.ReadAllText(LuaCsSetup.VersionFile) : "Github";
 
-            new GUITextBlock(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(10, 10) }, $"Using LuaCsForBarotrauma revision {AssemblyInfo.GitRevision} version {version}", Color.Red)
+            new GUITextBlock(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(10, 10) }, $"Using LuaCsForBarotrauma (thakyz Build) revision {AssemblyInfo.GitRevision} version {version}", Color.Red)
             {
                 IgnoreLayoutGroups = false
             };
@@ -534,8 +534,8 @@ namespace Barotrauma
             tutorialHeader = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), string.Empty, font: GUIStyle.SubHeadingFont);
             tutorialDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), string.Empty, wrap: true);
 
-            var startButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.0f), infoContent.RectTransform, Anchor.BottomRight), text: TextManager.Get("startgamebutton")) 
-            { 
+            var startButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.0f), infoContent.RectTransform, Anchor.BottomRight), text: TextManager.Get("startgamebutton"))
+            {
                 IgnoreLayoutGroups = true,
                 OnClicked = (component, obj) =>
                 {
@@ -587,7 +587,7 @@ namespace Barotrauma
             GameMain.LuaCs.Stop();
 
             ResetModUpdateButton();
-            
+
             if (WorkshopItemsToUpdate.Any())
             {
                 while (WorkshopItemsToUpdate.TryDequeue(out ulong workshopId))
@@ -595,7 +595,7 @@ namespace Barotrauma
                     SteamManager.Workshop.OnItemDownloadComplete(workshopId, forceInstall: true);
                 }
             }
-            
+
             GUI.PreventPauseMenuToggle = false;
 
             base.Select();
@@ -608,7 +608,7 @@ namespace Barotrauma
 
             GameMain.SubEditorScreen?.ClearBackedUpSubInfo();
             Submarine.Unload();
-            
+
             ResetButtonStates(null);
         }
 
@@ -814,11 +814,11 @@ namespace Barotrauma
             gamesession.StartRound(fixedSeed ? "abcd" : ToolBox.RandomSeed(8), difficulty, levelGenerationParams);
             GameMain.GameScreen.Select();
             // TODO: modding support
-            Identifier[] jobIdentifiers = new Identifier[] { 
-                "captain".ToIdentifier(), 
-                "engineer".ToIdentifier(), 
-                "mechanic".ToIdentifier(), 
-                "securityofficer".ToIdentifier(), 
+            Identifier[] jobIdentifiers = new Identifier[] {
+                "captain".ToIdentifier(),
+                "engineer".ToIdentifier(),
+                "mechanic".ToIdentifier(),
+                "securityofficer".ToIdentifier(),
                 "medicaldoctor".ToIdentifier() };
             foreach (Identifier job in jobIdentifiers)
             {
@@ -837,7 +837,7 @@ namespace Barotrauma
         private void ShowTutorialSkipWarning(Tab tabToContinueTo)
         {
             var tutorialSkipWarning = new GUIMessageBox("", TextManager.Get("tutorialskipwarning"), new LocalizedString[] { TextManager.Get("tutorialwarningskiptutorials"), TextManager.Get("tutorialwarningplaytutorials") });
-            
+
             GUIButton.OnClickedHandler proceedToTab(Tab tab)
                 => (btn, userdata) =>
                 {
@@ -915,7 +915,7 @@ namespace Barotrauma
             try
             {
                 string fileName;
-                if (serverExecutableDropdown.SelectedComponent?.UserData is ServerExecutableFile f && 
+                if (serverExecutableDropdown.SelectedComponent?.UserData is ServerExecutableFile f &&
                     f.ContentPackage != GameMain.VanillaContent)
                 {
                     fileName = Path.Combine(
@@ -958,7 +958,7 @@ namespace Barotrauma
                 }
                 int ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
                 arguments += " -ownerkey " + ownerKey;
-                                
+
                 var processInfo = new ProcessStartInfo
                 {
                     FileName = fileName,
@@ -1064,7 +1064,7 @@ namespace Barotrauma
                 modUpdatesButton.RectTransform.AbsoluteOffset =
                     (modButtonLabelSize.X, modsButton.Rect.Height / 2 - modUpdatesButton.Rect.Height / 2);
             }
-            
+
             switch (selectedTab)
             {
                 case Tab.NewGame:
@@ -1201,7 +1201,7 @@ namespace Barotrauma
             GameMain.LuaCs.Initialize();
 
             selectedSub = new SubmarineInfo(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"));
-            
+
             GameMain.GameSession = new GameSession(selectedSub, savePath, GameModePreset.SinglePlayerCampaign, settings, mapSeed);
             GameMain.GameSession.CrewManager.CharacterInfos.Clear();
             foreach (var characterInfo in campaignSetupUI.CharacterMenus.Select(m => m.CharacterInfo))
@@ -1294,7 +1294,7 @@ namespace Barotrauma
 
             var playstyleContainer = new GUIFrame(new RectTransform(new Vector2(1.35f, 0.1f), parent.RectTransform), style: null, color: Color.Black);
 
-            playstyleBanner = new GUIImage(new RectTransform(new Vector2(1.0f, 0.1f), playstyleContainer.RectTransform), 
+            playstyleBanner = new GUIImage(new RectTransform(new Vector2(1.0f, 0.1f), playstyleContainer.RectTransform),
                 GUIStyle.GetComponentStyle($"PlayStyleBanner.{PlayStyle.Serious}").GetSprite(GUIComponent.ComponentState.None), scaleToFit: true)
             {
                 UserData = PlayStyle.Serious
@@ -1306,9 +1306,9 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.05f), playstyleBanner.RectTransform) { RelativeOffset = new Vector2(0.01f, 0.03f) },
                 "playstyle name goes here", font: GUIStyle.SmallFont, textAlignment: Alignment.Center, textColor: Color.White, style: "GUISlopedHeader");
-            
-            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playstyleContainer.RectTransform, Anchor.CenterLeft) 
-                { RelativeOffset = new Vector2(0.02f, 0.0f), MaxSize = new Point(int.MaxValue, (int)(150 * GUI.Scale)) }, 
+
+            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playstyleContainer.RectTransform, Anchor.CenterLeft)
+                { RelativeOffset = new Vector2(0.02f, 0.0f), MaxSize = new Point(int.MaxValue, (int)(150 * GUI.Scale)) },
                 style: "UIToggleButton")
             {
                 OnClicked = (btn, userdata) =>
@@ -1320,7 +1320,7 @@ namespace Barotrauma
                 }
             }.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
 
-            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playstyleContainer.RectTransform, Anchor.CenterRight) 
+            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playstyleContainer.RectTransform, Anchor.CenterRight)
                 { RelativeOffset = new Vector2(0.02f, 0.0f), MaxSize = new Point(int.MaxValue, (int)(150 * GUI.Scale)) },
                 style: "UIToggleButton")
             {
@@ -1362,7 +1362,7 @@ namespace Barotrauma
 
             var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
             serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), text: name, textAlignment: textAlignment)
-            { 
+            {
                 MaxTextLength = NetConfig.ServerNameMaxLength,
                 OverflowClip = true
             };
@@ -1382,7 +1382,7 @@ namespace Barotrauma
             };
             maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform), textAlignment: Alignment.Center)
             {
-                Text = maxPlayers.ToString()                
+                Text = maxPlayers.ToString()
             };
             maxPlayersBox.OnEnterPressed += (GUITextBox sender, string text) =>
             {
@@ -1453,7 +1453,7 @@ namespace Barotrauma
                         return false;
                     };
                 }
-                
+
                 serverExecutableDropdown.Text = ToolBox.LimitString(serverExecutableDropdown.Text,
                     serverExecutableDropdown.Font, serverExecutableDropdown.Rect.Width * 8 / 10);
 
@@ -1506,8 +1506,8 @@ namespace Barotrauma
 
                     if (isPublicBox.Selected && ForbiddenWordFilter.IsForbidden(name, out string forbiddenWord))
                     {
-                        var msgBox = new GUIMessageBox("", 
-                            TextManager.GetWithVariables("forbiddenservernameverification", ("[forbiddenword]", forbiddenWord), ("[servername]", name)), 
+                        var msgBox = new GUIMessageBox("",
+                            TextManager.GetWithVariables("forbiddenservernameverification", ("[forbiddenword]", forbiddenWord), ("[servername]", name)),
                             new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
                         msgBox.Buttons[0].OnClicked += (_, __) =>
                         {

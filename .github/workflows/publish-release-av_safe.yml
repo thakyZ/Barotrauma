@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
-name: Publish av_safe release
+name: Publish Release (AV Safe)
 
 on:
   workflow_call:
@@ -28,7 +28,7 @@ env:
     linux:server:Linux/Server
     mac:client:Mac/Client/Barotrauma.app/Contents/MacOS
     mac:server:Mac/Server
-  ARCHIVE_BASE_NAME: luacsforbarotrauma-${{ inputs.tag }}
+  ARCHIVE_BASE_NAME: luacsforbarotrauma-av_safe-${{ inputs.tag }}
   # XXX: these file names are subject to shell expansion.
   # Be careful when using special characters.
   ARCHIVE_FILES_SERVER: |
@@ -65,15 +65,15 @@ env:
     mscordaccore_amd64_amd64_*
     Lua
   BUILD_FILES: |
-    .github/build_files/dummyitem.xml
-    .github/build_files/filelist.xml
-  FILE_TREE_SCHEME: .github/build_files/filetree.yml
+    dummyitem.xml
+    filelist.xml
+  FILE_TREE_SCHEME: filetree.yml
   YQ_VERSION: v4.2.0
   YQ_BINARY: yq_linux_amd64
 
 jobs:
   build:
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/build-av_safe.yml
     with:
       target: ${{ inputs.target }}
 
@@ -81,9 +81,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
-      - run: |
-          wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_BINARY}.tar.gz -O - |\
-            tar xz && mv ${BINARY} /usr/bin/yq
+      - name: Setup yq
+        uses: vegardit/gha-setup-yq@caa73650aeef8f254f5830ec16d9acd9067b45bb # v1.0.0
 
       - name: Download build artifacts
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
@@ -93,10 +92,10 @@ jobs:
 
       - name: Extract build artifacts
         run: |
-          artifacts_dir="$(realpath -m "$CI_DIR/artifacts")"
-          mkdir -p "$artifacts_dir"
-          tar -xzf "$CI_DIR/build.tar.gz" -C "$artifacts_dir"
-          rm "$CI_DIR/build.tar.gz"
+          artifacts_dir="$(realpath -m "${CI_DIR}/artifacts")"
+          mkdir -p "${artifacts_dir}"
+          tar -xzf "${CI_DIR}/build.tar.gz" -C "${artifacts_dir}"
+          rm "${CI_DIR}/build.tar.gz"
 
       - name: Create archives
         run: |
@@ -125,16 +124,14 @@ jobs:
             exit 1;
           fi
 
-          MOD_BUILD_FILES=$(yq eval '.Binary' "$CI_DIR/$FILE_TREE_SCHEME" | sed -E 's/- //gm')
+          artifacts_dir="$(realpath -m "${CI_DIR}/artifacts")"
+          mkdir -p "${artifacts_dir}"
+
+          archives_dir="$(realpath -m "${CI_DIR}/archives")"
+          mkdir -p "${archives_dir}"
+
+          MOD_BUILD_FILES=$(yq eval '.Binary' "${artifacts_dir}/${FILE_TREE_SCHEME}" | sed -E 's/- //gm')
           lines_to_array MOD_BUILD_FILES
-
-          artifacts_dir="$(realpath -m "$CI_DIR/artifacts")"
-          mkdir -p "$artifacts_dir"
-
-          archives_dir="$(realpath -m "$CI_DIR/archives")"
-          mkdir -p "$archives_dir"
-
-          missing_build_files=""
 
           for i in "${!RELEASES[@]}"; do
             [[ -z "${RELEASES[i]}" ]] && continue
@@ -142,17 +139,10 @@ jobs:
               IFS=':' read -r platform side publish_dir _rest <<< "${RELEASES[i]}"
               cd "${artifacts_dir}/${publish_dir}"
 
-              for key in "${MOD_BUILD_FILES[@]}"; do
-                if [ ! -f "./${key}" ] && [ ! -d "./${key}" ]; then
-                  missing_build_files="${missing_build_files}\n${key}";
-                fi
-              done
-
-              if [ "${missing_build_files}" != "" ]; then
-                echo "There were build files missing!"
-                echo -e "${missing_build_files}"
-                exit 1
-              fi
+              echo ""
+              echo "==============================================="
+              echo "Platform: ${platform} - Side: ${side}"
+              echo "==============================================="
 
               echo "Creating build_${platform}_${side}.zip"
               zip --must-match -qr "${archives_dir}/${ARCHIVE_BASE_NAME}_build_${platform}_${side}.zip" ./*
@@ -164,13 +154,17 @@ jobs:
 
               if [[ "$side" == "client" ]]; then
                 files=(
-                  "${ARCHIVE_FILES_SHARED[@]}"
-                  "${ARCHIVE_FILES_CLIENT[@]}"
+                  # shellcheck disable=SC2206
+                  ${ARCHIVE_FILES_SHARED[@]}
+                  # shellcheck disable=SC2206
+                  ${ARCHIVE_FILES_CLIENT[@]}
                 )
               elif [[ "$side" == "server" ]]; then
                 files=(
-                  "${ARCHIVE_FILES_SHARED[@]}"
-                  "${ARCHIVE_FILES_SERVER[@]}"
+                  # shellcheck disable=SC2206
+                  ${ARCHIVE_FILES_SHARED[@]}
+                  # shellcheck disable=SC2206
+                  ${ARCHIVE_FILES_SERVER[@]}
                 )
               else
                 echo "Invalid side: $side"
@@ -190,45 +184,137 @@ jobs:
                 --owner=0 --group=0 \
                 "${files[@]}"
 
-              echo "Creating mod_release_${platform}_${side}.zip"
+              if [ "${side}" != "server" ]; then
+                missing_build_files=""
 
-              mkdir "${artifacts_dir}/${publish_dir}/global" \
-                && mkdir "${artifacts_dir}/${publish_dir}/global/Binary" \
-                  && cd "${artifacts_dir}/${publish_dir}/global/Binary" \
-                    || exit 1
+                for key in "${MOD_BUILD_FILES[@]}"; do
+                  if [ ! -f "${artifacts_dir}/${publish_dir}/${key}" ] && [ ! -d "${artifacts_dir}/${publish_dir}/${key}" ]; then
+                    missing_build_files="${missing_build_files}\n - ${key}";
+                  fi
+                done
 
-              for key in "${MOD_BUILD_FILES[@]}"; do
-                cp -rfv "${artifacts_dir}/${publish_dir}/${key}" "${PWD}/${key}" \
-                  || (echo "Failed to copy \`${artifacts_dir}/${publish_dir}/${key}' to \`${PWD}/${key}'" && exit 1)
-              done
+                echo ""
+                if [ "${missing_build_files}" != "" ]; then
+                  echo "There were build files missing!"
+                  echo -e "${missing_build_files}"
+                  # exit 1
+                fi
+                
+                for key in "${MOD_BUILD_FILES[@]}"; do
+                  if [ ! -f "${artifacts_dir}/${publish_dir}/${key}" ] && [ ! -d "${artifacts_dir}/${publish_dir}/${key}" ]; then
+                    missing_build_files="${missing_build_files}\n - ${key}";
+                  fi
+                done
+                echo "Creating mod_release_${platform}_${side}.zip"
 
-              cd "${artifacts_dir}/${publish_dir}/global"
+                (mkdir "${artifacts_dir}/${publish_dir}/global" \
+                  && mkdir "${artifacts_dir}/${publish_dir}/global/Binary" \
+                    && cd "${artifacts_dir}/${publish_dir}/global/Binary") \
+                      || (echo "failed to create the mod pack directory." && exit 1)
 
-              for key in "${BUILD_FILES[@]}"; do
-                cp -rfv "${CI_DIR}/${key}" "${PWD}" \
-                  || (echo "Failed to copy \`${CI_DIR}/${key}' to \`${PWD}/${key}'" && exit 1)
-              done
+                for key in "${MOD_BUILD_FILES[@]}"; do
+                  if [ -f "${artifacts_dir}/${publish_dir}/${key}" ] && [ -d "${artifacts_dir}/${publish_dir}/${key}" ]; then
+                    cp -rf "${artifacts_dir}/${publish_dir}/${key}" "${artifacts_dir}/${publish_dir}/global/Binary/${key}" \
+                      || (echo "Failed to copy \`${artifacts_dir}/${publish_dir}/${key}' to \`${artifacts_dir}/${publish_dir}/global/Binary/${key}'" && exit 1)
+                  fi
+                done
 
-              zip \
-                --must-watch \
-                -qr \
-                "${archives_dir}/${ARCHIVE_BASE_NAME}_patch_${platform}_${side}.zip" \
-                "./*"
+                cd "${artifacts_dir}/${publish_dir}/global"
+
+                for j in "${!BUILD_FILES[@]}"; do
+                  [[ -z "${BUILD_FILES[j]}" ]] && continue
+                  (
+                    cp -rf "${artifacts_dir}/${BUILD_FILES[j]}" "${artifacts_dir}/${publish_dir}/global/Binary/${BUILD_FILES[j]}" \
+                      || (echo "Failed to copy \`${artifacts_dir}/${BUILD_FILES[j]}' to \`${artifacts_dir}/${publish_dir}/${BUILD_FILES[j]}'" && exit 1)
+                  )
+                done
+
+                zip \
+                  -qr \
+                  "${archives_dir}/mod_release_${platform}_global.zip" \
+                  ./*
+
+                cd "${artifacts_dir}/${publish_dir}"
+              fi
             )
           done
+      
+      - name: Check Archive Directory
+        if: ${{ startsWith(github.event.head_commit.message, '[🧪]') }}
+        run: |
+          test=0
+          echo "Checking directory: ${{ env.CI_DIR }} (env.CI_DIR)"
+          if [ -d "${{ env.CI_DIR }}" ]; then
+            echo "${{ env.CI_DIR }} (env.CI_DIR) does exist."
+            echo ""
+            echo "Getting contents of direcotry: ${{ env.CI_DIR }} (env.CI_DIR)"
+            ls -la "${{ env.CI_DIR }}"
+          else
+            echo "${{ env.CI_DIR }} (env.CI_DIR) does not exist."
+            test += 1;
+          fi
+          echo ""
+          echo "Checking directory: ${{ env.CI_DIR }}/archives (archives)"
+          if [ -d "${{ env.CI_DIR }}/archives" ]; then
+            echo "${{ env.CI_DIR }}/archives (archives) does exist."
+            echo ""
+            echo "Getting contents of direcotry: ${{ env.CI_DIR }}/archives (archives)"
+            ls -la "${{ env.CI_DIR }}/archives"
+          else
+            echo "${{ env.CI_DIR }}/archives (archives) does not exist."
+            test += 1
+          fi
+          echo "Checking realpath of ${{ env.CI_DIR }}/archives (realpath)"
+          if [ ! -z "$(realpath "${{ env.CI_DIR }}/archives")" ] && [ -d "$(realpath "${{ env.CI_DIR }}/archives")" ]; then
+            echo "$(realpath "${{ env.CI_DIR }}/archives") (realpath) does exist."
+            echo ""
+            echo "Getting contents of direcotry: $(realpath "${{ env.CI_DIR }}/archives") (realpath)"
+            ls -la "$(realpath "${{ env.CI_DIR }}/archives")"
+          else
+            echo "$(realpath "${{ env.CI_DIR }}/archives") (realpath) does not exist."
+            test += 1;
+          fi
+          
+          if [ $test -gt 0 ]; then
+            exit 1;
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-        if: startsWith(github.event.head_commit.message, '[🧪]')
+        if: ${{ startsWith(github.event.head_commit.message, '[🧪]') }}
         with:
           path: |
-            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_{build,patch}_{windows,linux,mac}_{client,server}.zip
-            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_{build,patch}_linux_{client,server}.tar.gz
-            ${{ env.CI_DIR }}/archives/mod_release_{windows,linux,mac}_global.zip
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_build_windows_client.tar.gz
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_build_windows_client.zip
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_build_windows_server.tar.gz
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_build_windows_server.zip
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_patch_windows_client.tar.gz
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_patch_windows_client.zip
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_patch_windows_server.tar.gz
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_patch_windows_server.zip
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_build_linux_client.tar.gz
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_build_linux_client.zip
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_build_linux_server.tar.gz
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_build_linux_server.zip
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_patch_linux_client.tar.gz
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_patch_linux_client.zip
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_patch_linux_server.tar.gz
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_patch_linux_server.zip
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_build_mac_client.tar.gz
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_build_mac_client.zip
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_build_mac_server.tar.gz
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_build_mac_server.zip
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_patch_mac_client.tar.gz
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_patch_mac_client.zip
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_patch_mac_server.tar.gz
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_patch_mac_server.zip
+            ${{ env.CI_DIR }}/archives/mod_release_windows_global.zip
+            ${{ env.CI_DIR }}/archives/mod_release_linux_global.zip
+            ${{ env.CI_DIR }}/archives/mod_release_mac_global.zip
 
       - name: Publish release
         uses: notpeelz/action-gh-create-release@c1bebd17c8a128e8db4165a68be4dc4e3f106ff1 # v5.0.1
-        if: "!startsWith(github.event.head_commit.message, '[🧪]')"
+        if: ${{ !startsWith(github.event.head_commit.message, '[🧪]') }}
         with:
           target: ${{ inputs.target }}
           tag: ${{ inputs.tag }}

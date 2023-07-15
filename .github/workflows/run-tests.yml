@@ -8,9 +8,6 @@ on:
       target:
         required: true
         type: string
-      repository:
-        required: true
-        type: string
 
 jobs:
   run-tests:

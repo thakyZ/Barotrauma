@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: On push to av_safe branch
+
+on:
+  push:
+    branches: [av_safe]
+    paths-ignore:
+      - ".github/**"
+      - "*.md"
+  workflow_dispatch:
+
+jobs:
+  run-tests:
+    uses: ./.github/workflows/run-tests.yml
+    with:
+      target: ${{ github.event.ref }}
+
+  publish-release:
+    uses: ./.github/workflows/publish-release-av_safe.yml
+    with:
+      target: ${{ github.event.ref }}
+      tag: latest
+

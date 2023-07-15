@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
-name: Publish release
+name: Publish av_safe release
 
 on:
   workflow_call:
@@ -69,7 +69,7 @@ env:
     .github/build_files/filelist.xml
   FILE_TREE_SCHEME: .github/build_files/filetree.yml
   YQ_VERSION: v4.2.0
-  YQ_BINARY: v4.2.0
+  YQ_BINARY: yq_linux_amd64
 
 jobs:
   build:

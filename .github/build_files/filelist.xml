@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="Lua For Barotrauma (with Xpath Patch) (AV Safe)" modversion="1.0.80" corepackage="False" steamworkshopid="3002471916" gameversion="1.0.21.0" expectedhash="0A4A667D5336F428D1DFD19CE7A05483">
+<contentpackage name="Lua For Barotrauma (with Xpath Patch) (AV Safe)" modversion="1.0.80" corepackage="False" steamworkshopid="3002471916" gameversion="1.0.21.0">
   <ServerExecutable file="%ModDir%/Binary/DedicatedServer.exe" />
   <Item file="%ModDir%/dummyitem.xml" />
 </contentpackage>
